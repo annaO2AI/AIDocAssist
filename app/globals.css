@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  color: rgb(var(--foreground-rgb));
+}
+
+
+
+/* ✅ Custom utilities using @layer if needed */
+@layer utilities {
+  .background-chat-ui{
+    background-image: url(../public/bg-otwobg.png); 
+    background-size:cover ;
+    background-color: #F4F8FB;
+  }
+  .otitle {
+    /* color:#323232; */
+    background: linear-gradient(to right, #0A0530,  #4D5DCE, #436EE3);
+    background-clip: text;
+    color: transparent;
+  }
+  .ot-title{
+    color: #34334B;
+  }
+  .osubtitle {
+    color: #34334B;
+    opacity: 0.9;
+  }
+  .border-o2{
+    border: 1px solid #d7d9dd; 
+  }
+  .border-o3{
+    border: 1px solid #F2F2F2; 
+  }
+  .aisearchinput{
+    background-color: #F8F8F8;
+  }
+  .o2AlignSearch-center{
+    height: calc(100vh - 150px);
+    margin: auto;
+    align-content: center;
+    width: 70%;
+    margin-top: 110px;
+    transition: all 0.9s ease-in-out;
+  }
+  .header-widthfix{
+    width: 70%
+  }
+  .o2AlignSearchm1-center{
+    align-content: flex-end;
+  }
+  .o2AlignSearch-inner-center{
+    height: calc(100vh - 174px);
+    margin: auto;
+    align-content: center;
+    width: 60%;
+    justify-content: end;
+    display: flex;
+    
+  }
+  .backdivbg{
+    /* Add the blur effect */
+    background-color: #ffffff7a;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: rgba(255, 255, 255, 0.4);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+  }
+   .backdivbgProfile{
+    /* Add the blur effect */
+    background-color: #ffffff7a;
+    background-color: rgba(255, 255, 255, 0.4);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+  }
+  .line-braksr{
+    line-break: anywhere;
+  }
+  .minarea-max-hright{
+    height: calc(100vh - 153px);
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    transition: all 0.9s ease-in-out;
+    scroll-behavior: smooth;
+  }
+
+  .minarea-max-hright-aiops{
+    height: calc(100vh - 202px);
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    transition: all 0.9s ease-in-out;
+    scroll-behavior: smooth;
+  }
+
+  #chat-box {
+  flex: 1;
+  overflow-y: visible; /* Or 'auto' if you want chat-box to scroll */
+  padding: 0 8px;
+}
+  .aisearchinput:hover{
+    /* border: 1px solid #4720f8;
+    
+    border-image: linear-gradient(to right, darkblue, darkorchid) 1;
+    border-radius: 50em; */
+
+    background: linear-gradient(white, white) padding-box,
+        linear-gradient(to right, rgba(16, 16, 221, 0.322), rgba(153, 50, 204, 0.363)) border-box;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    box-shadow: 1px 1px 10px #4820f81f;
+  }
+  .aisearchinput-focused{
+      background: linear-gradient(white, white) padding-box,
+        linear-gradient(to right, rgba(16, 16, 221, 0.322), rgba(153, 50, 204, 0.363)) border-box;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    box-shadow: 1px 1px 10px #4820f81f;
+  }
+  .boxshadow{
+    box-shadow: 0px 2px 10px #0000000d;
+  }
+
+  /* handel dashbord main container */
+  .ot-dashbord-main-container .dashbord-miannot{
+    display: none;
+  }
+   .ot-dashbord-main-container .dashordmain-custom-stylewrap{
+      justify-content: flex-start !important;
+      margin: 0 !important;
+  }
+  .ot-dashbord-main-container .dashordmain-custom-style{
+    width: 190px;
+    box-shadow: 0px 11px 19px #2563eb47;
+  }
+
+  .ot-min-h-screen{
+    min-height: calc(100vh - 200px);
+  }
+   .audio-insights-main  + .Dashbordmain-main{
+    display: none !important;
+  }
+  .emailactivatbg{
+    background: #fff;
+    background: linear-gradient(134deg,rgb(236, 248, 248) 40%, rgb(250, 232, 232) 100%);
+  }
+  .emailBoder{
+    border: 1px solid rgb(185, 219, 235) ;
+  }
+  .o2-agent-shadow
+  {
+        box-shadow: 0px 0px 15px #1d1f2742;
+  }
+  .ot-customline{
+    height: 1px;
+    border-bottom: 1px dotted #d7d9dd;
+  }
+  .backclose{
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+  }
+  .activenavigation{
+    position: relative;
+    background-color: #e5edfb;
+  }
+  .activenavigation::after{
+    content: "";
+    height: 2.5px;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: -17px;
+    display: block;
+    background-color: #3C77EF;
+    border-radius: 10px;
+  }
+  .custome-header-shadow{
+        box-shadow: 1px 1px 30px #23212b14;
+  }
+  .main-width-manu{
+    svg{
+      width: 20px;
+      min-width: 20px;
+    }
+  }
+  .main-toggleSidebar{
+    margin-right: -35px;
+  }
+  .imagfilter{
+    filter: brightness(0.98);
+  }
+  .bradcurame-section{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    background-color: #fafafa;
+     transition: all 0.3s ease-in-out;
+
+  }
+  .chatmassage-wrapper h3{
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding: 2px 1px;
+  }
+
+  .chatmassage-wrapper h4{
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 15px;
+    background-color: #f9f9f9;
+    margin-bottom: 5px;
+    padding: 2px 1px;
+    margin-bottom: 10px;
+  }
+  .chatmassage-wrapper ul{
+      list-style: outside;
+    margin-left: 20px;
+  }
+  .chatmassage-wrapper li{
+      margin-bottom: 15px;
+  }
+}
