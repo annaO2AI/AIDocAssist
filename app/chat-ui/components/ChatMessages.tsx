@@ -1,5 +1,5 @@
 // components/ChatMessages.tsx
-import { LoganimationsIcon, DOCIcon, PDFIcon, LogIcon, speeker } from "./icons";
+import { LoganimationsIcon, DOCIcon, PDFIcon, LogIcon } from "./icons";
 
 interface Message {
   sender: "user" | "ai";
