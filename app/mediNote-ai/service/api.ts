@@ -1,11 +1,11 @@
 import { HealthResponse } from "../types";
-
-const API_BASE_URL = "https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/";
+import { API_ROUTES } from "../../constants/api";
+// const API_BASE_URL = "https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/";
 
 export class APIService {
   static async healthCheck(): Promise<HealthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}`, {
+      const response = await fetch(`${API_ROUTES}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -29,9 +29,8 @@ export class APIService {
       formData.append('audio', audioFile);
       formData.append('role', speakerType);
 
-      const response = await fetch(`${API_BASE_URL}api/enroll_voice`, {
-        method: 'POST',
-        body: formData,
+      const response = await fetch(`${API_ROUTES.mediNote}`, {
+        method: "POST",
       });
 
       if (!response?.ok) {
