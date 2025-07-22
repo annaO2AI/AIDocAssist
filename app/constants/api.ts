@@ -41,5 +41,5 @@ export const API_ROUTES = {
      useaccess: `${API_BASE_URL_AISEARCH_HR}/api/auth/get-user-role`,
 
   //MediNote
-   mediNote: `${API_BASE_URL_AISEARCH_MediNote}/api/enroll_voice`,
+   mediNote: `${API_BASE_URL_AISEARCH_MediNote}api/enroll_voice`,
 }
