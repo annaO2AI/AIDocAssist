@@ -29,7 +29,7 @@ export class APIService {
       formData.append('audio', audioFile);
       formData.append('role', speakerType);
 
-      const response = await fetch(`${API_BASE_URL}/api/enroll_voice`, {
+      const response = await fetch(`${API_BASE_URL}api/enroll_voice`, {
         method: 'POST',
         body: formData,
       });
