@@ -31,6 +31,7 @@ export class APIService {
 
       const response = await fetch(`${API_ROUTES.mediNote}`, {
         method: "POST",
+        body: formData,
       });
 
       if (!response?.ok) {
