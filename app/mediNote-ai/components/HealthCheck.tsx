@@ -36,6 +36,7 @@ export default function HealthCheck({ onHealthy }: HealthCheckProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">System Status</h2>
         <button

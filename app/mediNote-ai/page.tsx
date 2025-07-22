@@ -67,17 +67,16 @@ export default function Home() {
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
           <main>
-            <div className="min-h-screen bg-gray-100">
-              <div className="container  py-8">
-                <div className="max-w-4xl  space-y-6">
+              <div className="pt-8 Trnascrption-Interface-wrapper">
                   {/* Transcription Interface */}
+                  {isFullyEnrolled && (
                   <TranscriptionInterface isEnabled={canStartTranscription} />
-
+                  )}
                   {/* Voice Enrollment */}
+                  {!isFullyEnrolled && (
                   <VoiceEnrollment onEnrollmentComplete={setEnrollmentStatus} />
-                </div>
+                  )}
               </div>
-            </div>
           </main>
         </div>
       </div>

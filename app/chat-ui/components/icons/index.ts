@@ -21,6 +21,11 @@ export { default as AiIcon } from './AiIcon';
 export { default as AiOps } from './AiOps';
 export { default as AIDocAssist } from './AIDocAssist';
 export { default as Speeker } from './speeker';
+export { default as MicIcon } from './MicIcon';
+export { default as AudioLineIcon } from './AudioLineIcon';
+export { default as StopRecoding } from './StopRecoding';
+export { default as MicOffIcon } from './MicOffIcon';
+
 
 
 

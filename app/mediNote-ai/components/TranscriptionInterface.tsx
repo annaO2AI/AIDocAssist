@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -5,16 +6,19 @@ import { Mic, MicOff, Wifi, WifiOff, RotateCcw } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { APIService } from '../service/api';
 import type { TranscriptMessage, ConversationEntry } from '../types';
+import { MicIcon, MicOffIcon, AudioLineIcon, StopRecoding } from "../../chat-ui/components/icons"
 
 interface TranscriptionInterfaceProps {
   isEnabled: boolean;
 }
+
 declare global {
   interface Window {
     webkitSpeechRecognition: any;
     SpeechRecognition: any;
   }
 }
+
 type SpeechRecognition = typeof window.webkitSpeechRecognition;
 
 export default function TranscriptionInterface({ isEnabled }: TranscriptionInterfaceProps) {
@@ -29,6 +33,7 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const conversationContainerRef = useRef<HTMLDivElement | null>(null); // New ref for conversation container
 
   const handleWebSocketMessage = useCallback((message: TranscriptMessage) => {
     console.log('Received WebSocket message:', message);
@@ -81,7 +86,7 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
-      recognition.onresult = (event:any) => {
+      recognition.onresult = (event: any) => {
         let finalTranscript = '';
         let interimTranscript = '';
 
@@ -99,7 +104,7 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
         if (finalTranscript) {
           const entry: ConversationEntry = {
             id: Date.now().toString(),
-            speaker: 'doctor', // Default to doctor for browser recognition
+            speaker: 'doctor',
             text: finalTranscript,
             timestamp: new Date().toLocaleTimeString(),
             isFromBackend: false
@@ -107,20 +112,26 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
           setConversation(prev => [...prev, entry]);
           setCurrentText('');
 
-          // Reset silence timeout
           resetSilenceTimeout();
         }
       };
 
-      recognition.onerror = (event:any) => {
+      recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
       };
 
       speechRecognitionRef.current = recognition;
     }
     const newSessionId = APIService.generateSessionId();
-      setSessionId(newSessionId);
+    setSessionId(newSessionId);
   }, []);
+
+  // Auto-scroll to bottom when conversation updates
+  useEffect(() => {
+    if (conversationContainerRef.current) {
+      conversationContainerRef.current.scrollTop = conversationContainerRef.current.scrollHeight;
+    }
+  }, [conversation, currentText]); // Trigger scroll on conversation or currentText change
 
   const resetSilenceTimeout = useCallback(() => {
     if (silenceTimeoutRef.current) {
@@ -135,11 +146,9 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
 
   const startRecording = async () => {
     try {
-      // Generate new session ID
       const newSessionId = APIService.generateSessionId();
       setSessionId(newSessionId);
 
-      // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -148,7 +157,6 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
         }
       });
 
-      // Start MediaRecorder for WebSocket streaming
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
       });
@@ -159,10 +167,9 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
         }
       };
 
-      mediaRecorder.start(1000); // Send chunks every 1000ms
+      mediaRecorder.start(1000);
       mediaRecorderRef.current = mediaRecorder;
 
-      // Start browser speech recognition
       if (speechRecognitionRef.current) {
         speechRecognitionRef.current.start();
       }
@@ -171,7 +178,6 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
       setRecordingTime(0);
       resetSilenceTimeout();
 
-      // Start recording timer
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
@@ -182,18 +188,15 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
   };
 
   const handleStopRecording = useCallback(() => {
-    // Stop MediaRecorder
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
 
-    // Stop speech recognition
     if (speechRecognitionRef.current) {
       speechRecognitionRef.current.stop();
     }
 
-    // Clear timers
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -220,10 +223,9 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="Transcription-Interface rounded-lg p-6 w-full flex flex-col justify-end max-w-7xl m-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          {/* Connection Status */}
           <div className="flex items-center space-x-2">
             {isConnected ? (
               <>
@@ -247,12 +249,16 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
         </div>
       </div>
 
-       {/* Conversation History */}
-      <div className="space-y-3 max-h-96 mb-6 overflow-y-auto">
+      {/* Conversation History */}
+      <div
+        ref={conversationContainerRef} // Attach ref to conversation container
+        className="space-y-3 mb-6 overflow-y-auto"
+        style={{ maxHeight: 'calc(100vh - 300px)' }} // Adjust height to fit within wrapper
+      >
         {conversation.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <p>Conversation will appear here...</p>
-            <p className="text-sm">Start recording to begin transcription</p>
+            {/* <p>Conversation will appear here...</p>
+            <p className="text-sm">Start recording to begin transcription</p> */}
           </div>
         ) : (
           conversation.map((entry) => (
@@ -294,23 +300,44 @@ export default function TranscriptionInterface({ isEnabled }: TranscriptionInter
       )}
 
       {/* Recording Controls */}
-      <div className="flex flex-col items-center space-y-4 ">
+      <div className="flex flex-col items-center space-y-4 w-full">
         {!isRecording ? (
-          <button
-            onClick={startRecording}
-            className="flex items-center space-x-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-            disabled={!isConnected}
-          >
-            <Mic className="w-6 h-6" />
-          </button>
-        ) : (
-          <div className="flex flex-col items-center space-y-2">
+          <div className="border-o2 w-full rounded-lg flex items-center ">
             <button
-              onClick={handleStopRecording}
-              className="flex items-center space-x-2 px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={startRecording}
+              className="flex items-center space-x-2 px-6 py-3 rounded-lg transition-colors"
+              disabled={!isConnected}
             >
-              <MicOff className="w-6 h-6" />
+              <MicIcon className="w-8 h-8" />
             </button>
+            {conversation.length === 0 ? (
+              <>
+                <div className="text-center py-8 text-gray-500">
+                  <p>Conversation will appear here...</p>
+                  <p className="text-sm">Start recording to begin transcription</p>
+                </div>
+              </>
+            ) : null}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center space-y-2 w-full">
+            <div className="flex w-full justify-between border-o2 rounded-lg border-highlight">
+              <div className="flex items-center">
+                <button
+                  onClick={handleStopRecording}
+                  className="flex items-center space-x-2 px-6 py-3 rounded-lg transition-colors"
+                >
+                  <MicOffIcon className="w-8 h-8" />
+                </button>
+                <AudioLineIcon className="w-[743px] h-[24px]" />
+              </div>
+              <button
+                onClick={handleStopRecording}
+                className="flex items-center space-x-2 px-6 py-3 rounded-lg transition-colors"
+              >
+                <StopRecoding className="w-[45] h-[45]" />
+              </button>
+            </div>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
