@@ -142,10 +142,8 @@ export async function fetchWithAuth(
     const localToken = localStorage.getItem("access_token");
     if (localToken) {
       token = localToken;
-      console.log("Using token from localStorage:", token);
     } else if (cookieToken) {
       token = cookieToken;
-      console.log("Using token from cookie:", token);
     } else {
       console.warn("No access token found in localStorage or cookies");
     }
@@ -156,7 +154,6 @@ export async function fetchWithAuth(
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  console.log("Request headers:", headers);
 
   if (
     !(init.body instanceof FormData) &&

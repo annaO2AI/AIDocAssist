@@ -36,7 +36,6 @@ export function useWebSocket({ sessionId, onMessage, onConnectionChange }: UseWe
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
         setIsConnected(true);
         setError(null);
         reconnectAttemptsRef.current = 0;
@@ -48,12 +47,10 @@ export function useWebSocket({ sessionId, onMessage, onConnectionChange }: UseWe
           const message: TranscriptMessage = JSON.parse(event.data);
           onMessage(message);
         } catch (err) {
-          console.error('Failed to parse WebSocket message:', err, event.data);
         }
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
         setIsConnected(false);
         onConnectionChange(false);
         
@@ -66,7 +63,6 @@ export function useWebSocket({ sessionId, onMessage, onConnectionChange }: UseWe
             30000 // Max 30s delay
           );
           
-          console.log(`Reconnecting in ${timeout}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;
@@ -78,13 +74,11 @@ export function useWebSocket({ sessionId, onMessage, onConnectionChange }: UseWe
       };
 
       ws.onerror = (event) => {
-        console.error('WebSocket error:', event);
         setError('WebSocket connection error');
         // Error event usually followed by close event, which handles reconnect
       };
       
     } catch (err) {
-      console.error('Failed to create WebSocket:', err);
       setError('Failed to establish WebSocket connection');
       // Immediate reconnect attempt
       if (reconnectAttemptsRef.current < maxReconnectAttempts) {

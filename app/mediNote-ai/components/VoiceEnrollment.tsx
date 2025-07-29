@@ -60,7 +60,6 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
       };
       
       setEnrollmentStatus(newStatus);
-      console.log(newStatus,"new status")
       setSuccessMessage(`${currentEnrollment.charAt(0).toUpperCase() + currentEnrollment.slice(1)} voice enrolled successfully!`);
       onEnrollmentComplete(newStatus);
       

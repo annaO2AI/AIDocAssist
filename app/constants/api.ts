@@ -15,7 +15,7 @@ const API_BASE_URL_AISEARCH_HR =
 
 
 //MediNote AI
-const API_BASE_URL_AISEARCH_MediNote =
+export const API_BASE_URL_AISEARCH_MediNote =
 process.env.NEXT_PUBLIC_API_BASE_URL_MediNote || "https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/";
 
 export const API_ROUTES = {
@@ -42,4 +42,7 @@ export const API_ROUTES = {
 
   //MediNote
    mediNote: `${API_BASE_URL_AISEARCH_MediNote}/api/enroll_voice`,
+   registerPatient:`${API_BASE_URL_AISEARCH_MediNote}api/patients`,
+   searchPatients:`${API_BASE_URL_AISEARCH_MediNote}api/patients/search`,
+   startConversation:`${API_BASE_URL_AISEARCH_MediNote}api/start-conversation`
 }

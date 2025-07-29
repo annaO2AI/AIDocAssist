@@ -4,12 +4,13 @@ import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import Sidebar from "../components/dashboard/Sidebar"
 import { DashboardProvider } from "../context/DashboardContext"
-import HealthCheck from "./components/HealthCheck"
 import VoiceEnrollment from "./components/VoiceEnrollment"
 import TranscriptionInterface from "./components/TranscriptionInterface"
-import type { ConversationEntry } from "./types"
 import HeaderAISearch from "../chat-ui/components/Header"
-import Breadcrumbs from "../components/dashboard/Breadcrumbs" // Import Breadcrumbs component
+import Breadcrumbs from "../components/dashboard/Breadcrumbs"
+import PatientRegistration from "./components/PatientRegistration"
+import { Patient, startConversation } from "./types"
+import StartConversation from "./components/StartConversation"
 
 interface EnrollmentStatus {
   doctor: boolean
@@ -17,18 +18,16 @@ interface EnrollmentStatus {
 }
 
 export default function Home() {
-  const [isBackendHealthy, setIsBackendHealthy] = useState(false)
+  const [isPatient, setIsPatient] = useState<Boolean>(false)
+  const [registerData, setRegisterData] = useState<Patient | null>(null)
   const [enrollmentStatus, setEnrollmentStatus] = useState<EnrollmentStatus>({
     doctor: false,
     patient: false,
   })
-  const [conversationHistory, setConversationHistory] = useState<
-    ConversationEntry[]
-  >([])
+  const [conversationData, setConversationData] = useState<startConversation | null>(null)
 
   const isFullyEnrolled = enrollmentStatus.doctor && enrollmentStatus.patient
   const canStartTranscription = isFullyEnrolled
-  //   const canStartTranscription = isBackendHealthy && isFullyEnrolled;
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(true)
   const [hovered, setHovered] = useState(false)
@@ -49,6 +48,7 @@ export default function Home() {
 
   // Show sidebar on the mediNote-ai page
   const showSidebar = pathname === "/mediNote-ai"
+  
   return (
     <DashboardProvider>
       <div className="flex overflow-hidden">
@@ -67,16 +67,37 @@ export default function Home() {
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
           <main>
-              <div className="pt-8 Trnascrption-Interface-wrapper">
-                  {/* Transcription Interface */}
-                  {isFullyEnrolled && (
-                  <TranscriptionInterface isEnabled={canStartTranscription} />
-                  )}
-                  {/* Voice Enrollment */}
-                  {!isFullyEnrolled && (
-                  <VoiceEnrollment onEnrollmentComplete={setEnrollmentStatus} />
-                  )}
+            {/* Step 1: Patient Registration */}
+            {!registerData && (
+              <PatientRegistration 
+                setIsPatient={setIsPatient} 
+                setRegisterData={setRegisterData}
+              />
+            )}
+            
+            {/* Step 2: Voice Enrollment (after patient is registered) */}
+            {registerData && !isFullyEnrolled && (
+              <div className="pt-8">
+                <VoiceEnrollment onEnrollmentComplete={setEnrollmentStatus} />
               </div>
+            )}
+            
+            {/* Step 3: Start Conversation (after voice enrollment is complete) */}
+            {registerData && isFullyEnrolled && !conversationData && (
+              <div className="pt-8">
+                <StartConversation 
+                  setData={setConversationData} 
+                  registerData={registerData}
+                />
+              </div>
+            )}
+            
+            {/* Step 4: Transcription Interface (after conversation is started) */}
+            {registerData && isFullyEnrolled && conversationData && (
+              <div className="pt-8 Transcription-Interface-wrapper">
+                <TranscriptionInterface isEnabled={canStartTranscription} conversationData={conversationData}/>
+              </div>
+            )}
           </main>
         </div>
       </div>
