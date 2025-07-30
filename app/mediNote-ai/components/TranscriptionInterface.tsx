@@ -8,8 +8,6 @@ import type { TranscriptMessage, ConversationEntry, startConversation } from '..
 import { MicIcon, MicOffIcon, AudioLineIcon, StopRecoding } from '../../chat-ui/components/icons'
 import SummarySection, { SummaryResponse } from './summary'
 
-
-
 declare global {
   interface Window {
     webkitSpeechRecognition: any
@@ -49,6 +47,9 @@ export default function TranscriptionInterface({ isEnabled, conversationData }: 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const conversationContainerRef = useRef<HTMLDivElement | null>(null)
   const recordedChunksRef = useRef<Blob[]>([])
+  const shouldRestartRecognition = useRef<boolean>(false)
+  const recognitionRestartTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
 console.log({conversationData})
   const uploadFullRecording = async (audioBlob: Blob, sessionId:any ): Promise<UploadResponse> => {
@@ -195,6 +196,26 @@ console.log({conversationData})
     onConnectionChange: handleConnectionChange
   })
 
+  // Function to restart speech recognition automatically
+  const restartSpeechRecognition = useCallback(() => {
+    if (!shouldRestartRecognition.current || !speechRecognitionRef.current) return
+
+    try {
+      speechRecognitionRef.current.start()
+      console.log('Speech recognition restarted')
+    } catch (error) {
+      console.log('Error restarting speech recognition:', error)
+      // If recognition is already running, this will throw an error, which is fine
+    }
+  }, [])
+
+  // Function to reset silence timeout
+  const resetSilenceTimeout = useCallback(() => {
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+    }
+  }, [])
+
   useEffect(() => {
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition
@@ -203,8 +224,11 @@ console.log({conversationData})
       recognition.continuous = true
       recognition.interimResults = true
       recognition.lang = 'en-US'
+      recognition.maxAlternatives = 1
 
       recognition.onresult = (event: any) => {
+        resetSilenceTimeout()
+        
         let finalTranscript = ''
         let interimTranscript = ''
 
@@ -233,13 +257,50 @@ console.log({conversationData})
       }
 
       recognition.onerror = (event: any) => {
+        console.log('Speech recognition error:', event.error)
+        
+        // Only restart if we're still supposed to be recording
+        if (shouldRestartRecognition.current && event.error !== 'aborted') {
+          recognitionRestartTimeoutRef.current = setTimeout(() => {
+            restartSpeechRecognition()
+          }, 1000)
+        }
+      }
+
+      recognition.onend = () => {
+        console.log('Speech recognition ended')
+        
+        // Automatically restart if we're still recording
+        if (shouldRestartRecognition.current) {
+          recognitionRestartTimeoutRef.current = setTimeout(() => {
+            restartSpeechRecognition()
+          }, 500)
+        }
+      }
+
+      recognition.onstart = () => {
+        console.log('Speech recognition started')
+        resetSilenceTimeout()
+      }
+
+      recognition.onspeechstart = () => {
+        console.log('Speech detected')
+        resetSilenceTimeout()
+      }
+
+      recognition.onspeechend = () => {
+        console.log('Speech ended')
+      }
+
+      recognition.onnomatch = () => {
+        console.log('No speech match')
       }
 
       speechRecognitionRef.current = recognition
     }
     const newSessionId = APIService.generateSessionId()
     setSessionId(newSessionId)
-  }, [])
+  }, [restartSpeechRecognition, resetSilenceTimeout])
 
   useEffect(() => {
     if (conversationContainerRef.current) {
@@ -254,6 +315,7 @@ console.log({conversationData})
 
       recordedChunksRef.current = []
       setUploadProgress(0)
+      shouldRestartRecognition.current = true
 
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -281,7 +343,12 @@ console.log({conversationData})
       mediaRecorderRef.current = mediaRecorder
 
       if (speechRecognitionRef.current) {
-        speechRecognitionRef.current.start()
+        try {
+          speechRecognitionRef.current.start()
+          console.log('Starting speech recognition')
+        } catch (error) {
+          console.log('Speech recognition ', error)
+        }
       }
 
       setIsRecording(true)
@@ -293,11 +360,26 @@ console.log({conversationData})
 
     } catch (error) {
       console.log('Failed to start recording:', error)
+      shouldRestartRecognition.current = false
     }
   }
 
   const stopRecording = async (): Promise<void> => {
     return new Promise((resolve) => {
+      shouldRestartRecognition.current = false
+
+      // Clear any pending restart timeouts
+      if (recognitionRestartTimeoutRef.current) {
+        clearTimeout(recognitionRestartTimeoutRef.current)
+        recognitionRestartTimeoutRef.current = null
+      }
+
+      // Clear silence timeout
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current)
+        silenceTimeoutRef.current = null
+      }
+
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop()
         mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop())
@@ -325,7 +407,12 @@ console.log({conversationData})
       }
 
       if (speechRecognitionRef.current) {
-        speechRecognitionRef.current.stop()
+        try {
+          speechRecognitionRef.current.stop()
+          console.log('Stopping speech recognition')
+        } catch (error) {
+          console.log('Error stopping speech recognition:', error)
+        }
       }
 
       if (timerRef.current) {
@@ -373,6 +460,22 @@ console.log({conversationData})
     setSummaryType('detailed')
     setShowSummaryOptions(false)
   }
+
+  // Cleanup function for component unmount
+  useEffect(() => {
+    return () => {
+      shouldRestartRecognition.current = false
+      if (recognitionRestartTimeoutRef.current) {
+        clearTimeout(recognitionRestartTimeoutRef.current)
+      }
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current)
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
 
   if (!isEnabled) {
     return (

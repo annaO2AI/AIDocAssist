@@ -29,7 +29,7 @@ export function useWebSocket({ sessionId, onMessage, onConnectionChange }: UseWe
       reconnectTimeoutRef.current = null;
     }
 
-    const wsUrl = `wss://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/ws/transcribe/${sessionId}`;
+    const wsUrl = `wss://doc-assistant-api.azurewebsites.net/ws/transcribe/${sessionId}`;
     
     try {
       const ws = new WebSocket(wsUrl);

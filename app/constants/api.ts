@@ -16,7 +16,7 @@ const API_BASE_URL_AISEARCH_HR =
 
 //MediNote AI
 export const API_BASE_URL_AISEARCH_MediNote =
-process.env.NEXT_PUBLIC_API_BASE_URL_MediNote || "https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/";
+process.env.NEXT_PUBLIC_API_BASE_URL_MediNote || "https://doc-assistant-api.azurewebsites.net/";
 
 export const API_ROUTES = {
   audioFiles: `${API_BASE_URL}/audio-files`,
