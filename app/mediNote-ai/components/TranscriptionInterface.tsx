@@ -85,14 +85,14 @@ console.log({conversationData})
         reject(new Error('Upload failed'))
       })
 
-      xhr.open('POST', 'https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/api/upload_full_recording')
+      xhr.open('POST', 'https://doc-assistant-api.azurewebsites.net/api/upload_full_recording')
       xhr.send(formData)
     })
   }
 
   const completeConversation = useCallback(async () => {
     try {
-      const completionUrl = `https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/complete`
+      const completionUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/complete`
       
       const response = await fetch(completionUrl, {
         method: 'POST',
@@ -147,7 +147,7 @@ console.log({conversationData})
       
       await completeConversation()
       
-      const summaryUrl = `https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/summary`
+      const summaryUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/summary`
       
       const summaryResponse = await fetch(summaryUrl, {
         method: 'POST',
@@ -169,7 +169,7 @@ console.log({conversationData})
         setSummaries(prev => [...prev, summaryData])
       }
       
-      const summariesUrl = `https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/summaries`
+      const summariesUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/summaries`
       const summariesResponse = await fetch(summariesUrl)
       
       if (!summariesResponse.ok) {

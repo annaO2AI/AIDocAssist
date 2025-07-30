@@ -2,7 +2,6 @@ import { HealthResponse, startConversationPayload } from "../types";
 import { API_BASE_URL_AISEARCH_MediNote, API_ROUTES } from "../../constants/api";
 import { PatientFormData } from "../components/PatientRegistration";
 import { promises } from "dns";
-// const API_BASE_URL = "https://doc-assistant-a9fafcdwb8gdh0fg.centralus-01.azurewebsites.net/";
 
 export class APIService {
   static async healthCheck(): Promise<HealthResponse> {
