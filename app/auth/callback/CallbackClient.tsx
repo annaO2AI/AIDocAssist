@@ -1,86 +1,35 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AuthCallbackPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    const url = new URL(window.location.href)
-    const token = url.searchParams.get("token")
+    // Ensure window is available (client-side only)
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get("token");
 
     if (token) {
-      document.cookie = `access_token=${token}; path=/`
-
-      // Redirect user to your dashboard or home page
-      router.push("/")
+      // Set cookie with secure flags
+      document.cookie = `access_token=${token}; path=/; secure; samesite=strict${
+        process.env.NODE_ENV === "production" ? "; secure" : ""
+      }`;
+      
+      // Use replace to avoid adding to browser history
+      router.replace("/");
     } else {
-      // Redirect to login with error if no token
-      router.push("/error=missing_token")
+      // Redirect with error parameter
+      router.replace("/auth/login?error=missing_token");
     }
-  }, [])
+  }, [router]); // Added router to dependencies
 
-  return <p>Logging in...</p>
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-600">Logging in...</p>
+    </div>
+  );
 }
-
-
-// "use client";
-
-// import { useEffect } from "react";
-// import { useRouter } from "next/navigation";
-
-// export default function AuthCallbackPage() {
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     // Ensure window is available (client-side only)
-//     if (typeof window === "undefined") return;
-
-//     const url = new URL(window.location.href);
-//     const token = url.searchParams.get("token");
-
-//     if (token) {
-//       document.cookie = `access_token=${token}; path=/; secure; samesite=strict`;
-//       router.replace("/"); // Use replace to avoid history entry
-//     } else {
-//       router.replace("/?error=missing_token"); // Consistent redirect path
-//     }
-//   }, [router]); // Added router to dependencies
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center">
-//       <p className="text-gray-600">Logging in...</p>
-//     </div>
-//   );
-// }
-
-// "use client";
-
-// import { useEffect } from "react";
-// import { useRouter } from "next/navigation";
-
-// export default function AuthCallbackPage() {
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     // Ensure window is available (client-side only)
-//     if (typeof window === "undefined") return;
-
-//     const url = new URL(window.location.href);
-//     const token = url.searchParams.get("token");
-
-//     if (token) {
-//       document.cookie = `access_token=${token}; path=/; secure; samesite=strict`;
-//       router.replace("/"); // Use replace to avoid history entry
-//     } else {
-//       router.replace("/?error=missing_token"); // Consistent redirect path
-//     }
-//   }, [router]); // Added router to dependencies
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center">
-//       <p className="text-gray-600">Logging in...</p>
-//     </div>
-//   );
-// }
