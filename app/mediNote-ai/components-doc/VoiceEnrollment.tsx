@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Mic, MicOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useAudioRecording } from '../hooks/useAudioRecording';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -28,6 +28,10 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
 
   const { isRecording, recordingTime, startRecording, stopRecording, error: recordingError } = useAudioRecording();
 
+  const handleEnrollmentComplete = useCallback((status: EnrollmentStatus) => {
+    onEnrollmentComplete(status);
+  }, [onEnrollmentComplete]);
+
   const handleStartEnrollment = async (speakerType: 'doctors' | 'patients') => {
     setCurrentEnrollment(speakerType);
     setError(null);
@@ -35,7 +39,7 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
     await startRecording();
   };
 
-  const handleStopEnrollment = async (speaker:'doctors' | 'patients') => {
+  const handleStopEnrollment = async (speaker: 'doctors' | 'patients') => {
     if (!speaker) return;
 
     const audioBlob = await stopRecording();
@@ -61,7 +65,7 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
       
       setEnrollmentStatus(newStatus);
       setSuccessMessage(`${speaker.charAt(0).toUpperCase() + speaker.slice(1)} voice enrolled successfully!`);
-      onEnrollmentComplete(newStatus);
+      handleEnrollmentComplete(newStatus);
       
     } catch (err) {
       setError(`Failed to enroll ${currentEnrollment} voice: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -76,8 +80,9 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
   };
 
   useEffect(() => {
-    onEnrollmentComplete(enrollmentStatus)
-  },[enrollmentStatus])
+    handleEnrollmentComplete(enrollmentStatus);
+  }, [enrollmentStatus, handleEnrollmentComplete]);
+
   return (
     <div className='voice-enrollment flex items-center justify-center'>
       <div className="bg-white rounded-lg shadow-md p-12 mb-12 w-[700px]">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { APIService } from '../service/api';
 import type { HealthResponse } from '../types';
@@ -14,7 +14,8 @@ export default function HealthCheck({ onHealthy }: HealthCheckProps) {
   const [lastCheck, setLastCheck] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  const performHealthCheck = async () => {
+  // Memoized health check function
+  const performHealthCheck = useCallback(async () => {
     setStatus('checking');
     setError('');
     
@@ -28,15 +29,14 @@ export default function HealthCheck({ onHealthy }: HealthCheckProps) {
       setError(err instanceof Error ? err.message : 'Health check failed');
       onHealthy(false);
     }
-  };
+  }, [onHealthy]); // Include all dependencies used in the callback
 
   useEffect(() => {
     performHealthCheck();
-  }, []);
+  }, [performHealthCheck]); // Now includes the memoized function
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">System Status</h2>
         <button

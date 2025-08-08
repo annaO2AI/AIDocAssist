@@ -1,29 +1,32 @@
-"use client"
-import React, { useState } from "react"
-import { usePathname } from "next/navigation"
-import { DashboardProvider } from "../context/DashboardContext"
-import Breadcrumbs from "../components/dashboard/Breadcrumbs"
-import Sidebar from "../components/dashboard/Sidebar"
-import PatientRegistration from "./components/PatientRegistration"
-import HeaderAISearch from "../chat-ui/components/Header"
-import SearchPatient from "./components/SearchPatient"
-import DoctorVoiceEnrollment from "./components/VoiceDoctorEnrollment"
-import PatientVoiceEnrollment from "./components/VoicePatientEnrollment"
+"use client";
 
-export default function page() {
-  const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(true)
-  const [hovered, setHovered] = useState(false)
+import React, { useState } from "react";
+import { usePathname } from "next/navigation";
+import { DashboardProvider } from "../context/DashboardContext";
+import Breadcrumbs from "../components/dashboard/Breadcrumbs";
+import Sidebar from "../components/dashboard/Sidebar";
+import PatientRegistration from "./components/PatientRegistration";
+import HeaderAISearch from "../chat-ui/components/Header";
+import SearchPatient from "./components/SearchPatient";
+import DoctorVoiceEnrollment from "./components/VoiceDoctorEnrollment";
+import PatientVoiceEnrollment from "./components/VoicePatientEnrollment";
 
-  const isSidebarExpanded = !collapsed || hovered
-  const sidebarWidth = isSidebarExpanded ? 256 : 64
+export default function Page() {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(true);
+  const [hovered, setHovered] = useState(false);
+
+  const isSidebarExpanded = !collapsed || hovered;
+  const sidebarWidth = isSidebarExpanded ? 256 : 64;
 
   const toggleCollapse = () => {
-    const newCollapsed = !collapsed
-    localStorage.setItem("sidebar-collapsed", String(newCollapsed))
-    setCollapsed(newCollapsed)
-  }
-  const showSidebar = pathname === "/mediNote-ai"
+    const newCollapsed = !collapsed;
+    localStorage.setItem("sidebar-collapsed", String(newCollapsed));
+    setCollapsed(newCollapsed);
+  };
+
+  const showSidebar = pathname === "/mediNote-ai";
+
   return (
     <DashboardProvider>
       <div className="flex overflow-hidden">
@@ -46,10 +49,10 @@ export default function page() {
             <PatientRegistration />
             <SearchPatient />
             <DoctorVoiceEnrollment />
-             <PatientVoiceEnrollment />
+            <PatientVoiceEnrollment />
           </main>
         </div>
       </div>
     </DashboardProvider>
-  )
+  );
 }
