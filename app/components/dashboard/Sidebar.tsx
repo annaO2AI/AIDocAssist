@@ -21,15 +21,9 @@ const menuItems = [
     label: "AI Search",
     icon: AiIcon,
     subItems: [
-      { label: "Talent Acquisition", href: "/talent-acquisition", icon: ArroTabIcon },
-    ],
-  },
-  {
-    id: "humanResources",
-    label: "Employee Enablement",
-    icon: HrIcon,
-    subItems: [
-      { label: "HR Compensation & Benefits", href: "/human-resources", icon: ArroTabIcon },
+      { label: "Patient Registration", href: "/mediNote-ai/patient-registration", icon: ArroTabIcon },
+      { label: "Patient Details", href: "/mediNote-ai/patient-details", icon: ArroTabIcon },
+      { label: "Doctor & Patient Voice", href: "/mediNote-ai/doctor-patient-voice", icon: ArroTabIcon },
     ],
   },
 ];
@@ -79,7 +73,7 @@ export default function Sidebar({
       </div>
       <div className="w-full h-screen text-gray-800 flex flex-col main-width-manu">
         {/* Render Menu Items with Submenus */}
-        {/* {menuItems.map((menu) => (
+        {menuItems.map((menu) => (
           <div key={menu.id} className="text-left">
             <button
               onClick={() => toggleMenu(menu.id)}
@@ -136,9 +130,9 @@ export default function Sidebar({
               ))}
             </div>
           </div>
-        ))} */}
+        ))}
         {/* Static Menu Item */}
-        <a
+        {/* <a
           href="#"
           onClick={handleSubItemClick}
           className="px-4 py-5 flex items-center hover:bg-gray-200 transition-colors gap-3 min-w-[20px]"
@@ -150,7 +144,7 @@ export default function Sidebar({
           ) : (
             <AIDocAssist width={20} />
           )}
-        </a>
+        </a> */}
       </div>
     </aside>
   );

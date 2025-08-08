@@ -24,10 +24,10 @@ export default function WelcomeMessage({ username }: WelcomeMessageProps) {
       </div>
       <div className="images-ill">
               <Image 
-                    src="/AIDocAssist-img.png" 
+                    src="/MediNote-AI.png" 
                     alt="I Search" 
-                    width={280} 
-                    height={280} 
+                    width={380} 
+                    height={380} 
                     className="imagfilter"
                 />
       </div>

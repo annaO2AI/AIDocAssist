@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import Sidebar from "../components/dashboard/Sidebar";
-import { DashboardProvider } from "../context/DashboardContext";
-import TalentAcquisition from "./components/talent-acquisition"; // Import TalentAcquisition directly
-// import HeaderAISearch from "../components/dashboard/HeaderAISearch";
-import HeaderAISearch from "../chat-ui/components/Header";
-import Breadcrumbs from "../components/dashboard/Breadcrumbs"; // Import Breadcrumbs component
+import Sidebar from "../../components/dashboard/Sidebar";
+import { DashboardProvider } from "../../context/DashboardContext";
+import HeaderAISearch from "../../chat-ui/components/Header";
+import Breadcrumbs from "../../components/dashboard/Breadcrumbs"; // Import Breadcrumbs component
+import DoctorPatientVoice from "./DoctorPatientVoice";
 
-export default function TalentAcquisitionPage() {
+export default function ProcurementSearchPage() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
   const [hovered, setHovered] = useState(false);
@@ -29,7 +28,7 @@ export default function TalentAcquisitionPage() {
   const sidebarWidth = isSidebarExpanded ? 256 : 64;
 
   // Show sidebar on the talent-acquisition page
-   const showSidebar =  pathname === "/talent-acquisition" ;
+   const showSidebar =  pathname === "/mediNote-ai/doctor-patient-voice" ;
 
   return (
     <DashboardProvider>
@@ -48,9 +47,8 @@ export default function TalentAcquisitionPage() {
           className="flex flex-col flex-1 transition-all duration-300 ease-in-out"
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
-          
           <main>
-            <TalentAcquisition onSend={() => console.log("Message sent")} />
+              <DoctorPatientVoice onEnrollmentComplete={(status) => { /* handle enrollment complete */ }} />
           </main>
         </div>
       </div>
