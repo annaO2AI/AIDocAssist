@@ -26,7 +26,7 @@ interface UploadResponse {
   message: string
 }
 
-export default function TranscriptionInterface({ isEnabled, conversationData }: {isEnabled : boolean, conversationData:startConversation | null}) {
+export default function TranscriptionInterface({ isEnabled }: {isEnabled : boolean}) {
   const [isRecording, setIsRecording] = useState(false)
   const [sessionId, setSessionId] = useState<string>('')
   const [conversation, setConversation] = useState<ConversationEntry[]>([])
@@ -51,7 +51,6 @@ export default function TranscriptionInterface({ isEnabled, conversationData }: 
   const recognitionRestartTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-console.log({conversationData})
   const uploadFullRecording = async (audioBlob: Blob, sessionId:any ): Promise<UploadResponse> => {
     const formData = new FormData()
     formData.append('session_id', sessionId)
@@ -92,7 +91,7 @@ console.log({conversationData})
 
   const completeConversation = useCallback(async () => {
     try {
-      const completionUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/complete`
+      const completionUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/complete`
       
       const response = await fetch(completionUrl, {
         method: 'POST',
@@ -147,7 +146,7 @@ console.log({conversationData})
       
       await completeConversation()
       
-      const summaryUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/summary`
+      const summaryUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/summary`
       
       const summaryResponse = await fetch(summaryUrl, {
         method: 'POST',
@@ -169,7 +168,7 @@ console.log({conversationData})
         setSummaries(prev => [...prev, summaryData])
       }
       
-      const summariesUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/${conversationData?.conversation_id}/summaries`
+      const summariesUrl = `https://doc-assistant-api.azurewebsites.net/api/conversations/summaries`
       const summariesResponse = await fetch(summariesUrl)
       
       if (!summariesResponse.ok) {
@@ -388,7 +387,7 @@ console.log({conversationData})
           if (recordedChunksRef.current.length > 0) {
             try {
               const fullRecording = new Blob(recordedChunksRef.current, { type: 'audio/webm;codecs=opus' })
-              const uploadResponse = await uploadFullRecording(fullRecording, conversationData?.session_id)
+              const uploadResponse = await uploadFullRecording(fullRecording, "")
               if (uploadResponse.status === 'success') {
                 // Handle successful upload
               }

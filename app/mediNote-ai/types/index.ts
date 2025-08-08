@@ -127,3 +127,17 @@ export interface startConversationPayload{
   title :string
 
 }
+
+export interface PatientCreationTypes {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    ssn_last4?: string;
+    address?: string;
+}
+
+export interface patient extends PatientCreationTypes{
+  id: number;
+  voice_enrolled: number;
+}

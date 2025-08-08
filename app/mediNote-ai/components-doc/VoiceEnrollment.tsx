@@ -7,8 +7,8 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { APIService } from '../service/api';
 
 interface EnrollmentStatus {
-  doctor: boolean;
-  patient: boolean;
+  doctors: boolean;
+  patients: boolean;
 }
 
 interface VoiceEnrollmentProps {
@@ -18,25 +18,25 @@ interface VoiceEnrollmentProps {
 export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmentProps) {
   const [enrollmentStatus, setEnrollmentStatus] = useLocalStorage<EnrollmentStatus>(
     'voice-enrollment-status',
-    { doctor: false, patient: false }
+    { doctors: false, patients: false }
   );
   
-  const [currentEnrollment, setCurrentEnrollment] = useState<'doctor' | 'patient' | null>(null);
+  const [currentEnrollment, setCurrentEnrollment] = useState<'doctors' | 'patients' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { isRecording, recordingTime, startRecording, stopRecording, error: recordingError } = useAudioRecording();
 
-  const handleStartEnrollment = async (speakerType: 'doctor' | 'patient') => {
+  const handleStartEnrollment = async (speakerType: 'doctors' | 'patients') => {
     setCurrentEnrollment(speakerType);
     setError(null);
     setSuccessMessage(null);
     await startRecording();
   };
 
-  const handleStopEnrollment = async () => {
-    if (!currentEnrollment) return;
+  const handleStopEnrollment = async (speaker:'doctors' | 'patients') => {
+    if (!speaker) return;
 
     const audioBlob = await stopRecording();
     if (!audioBlob) {
@@ -52,15 +52,15 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
         type: 'audio/webm'
       });
 
-      await APIService.enrollVoice(currentEnrollment, audioFile);
+      await APIService.enrollVoice(speaker, audioFile);
       
       const newStatus = {
         ...enrollmentStatus,
-        [currentEnrollment]: true
+        [speaker]: true
       };
       
       setEnrollmentStatus(newStatus);
-      setSuccessMessage(`${currentEnrollment.charAt(0).toUpperCase() + currentEnrollment.slice(1)} voice enrolled successfully!`);
+      setSuccessMessage(`${speaker.charAt(0).toUpperCase() + speaker.slice(1)} voice enrolled successfully!`);
       onEnrollmentComplete(newStatus);
       
     } catch (err) {
@@ -71,7 +71,7 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
     }
   };
 
-  const canStartRecording = (speakerType: 'doctor' | 'patient') => {
+  const canStartRecording = (speakerType: 'doctors' | 'patients') => {
     return !isRecording && !isSubmitting && currentEnrollment !== speakerType;
   };
 
@@ -86,26 +86,26 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-medium">Doctor</h3>
-              {enrollmentStatus.doctor && (
+              {enrollmentStatus.doctors && (
                 <CheckCircle className="w-5 h-5 text-green-500" />
               )}
             </div>
             
-            {canStartRecording('doctor') && (
+            {canStartRecording('doctors') && (
               <button
-                onClick={() => handleStartEnrollment('doctor')}
+                onClick={() => handleStartEnrollment('doctors')}
                 className="w-full flex items-center justify-center space-x-2 py-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                disabled={!canStartRecording('doctor')}
+                disabled={!canStartRecording('doctors')}
               >
                 <Mic className="w-5 h-5" />
                 <span>Enroll Doctor Voice</span>
               </button>
             )}
 
-            {currentEnrollment === 'doctor' && isRecording && (
+            {currentEnrollment === 'doctors' && isRecording && (
               <div className="space-y-3">
                 <button
-                  onClick={handleStopEnrollment}
+                  onClick={() => handleStopEnrollment("doctors")}
                   className="w-full flex items-center justify-center space-x-2 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                 >
                   <MicOff className="w-5 h-5" />
@@ -120,7 +120,7 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
               </div>
             )}
 
-            {enrollmentStatus.doctor && (
+            {enrollmentStatus.doctors && (
               <div className="text-center py-3 text-green-600">
                 ✓ Doctor voice enrolled
               </div>
@@ -131,26 +131,26 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
           <div className="border rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-medium">Patient</h3>
-                {enrollmentStatus.patient && (
+                {enrollmentStatus.patients && (
                   <CheckCircle className="w-5 h-5 text-green-500" />
                 )}
               </div>
               
-              {canStartRecording('patient') && (
+              {canStartRecording('patients') && (
                 <button
-                  onClick={() => handleStartEnrollment('patient')}
+                  onClick={() => handleStartEnrollment('patients')}
                   className="w-full flex items-center justify-center space-x-2 py-3 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                  disabled={!canStartRecording('patient')}
+                  disabled={!canStartRecording('patients')}
                 >
                   <Mic className="w-5 h-5" />
                   <span>Enroll Patient Voice</span>
                 </button>
               )}
 
-              {currentEnrollment === 'patient' && isRecording && (
+              {currentEnrollment === 'patients' && isRecording && (
                 <div className="space-y-3">
                   <button
-                    onClick={handleStopEnrollment}
+                    onClick={() => handleStopEnrollment("patients")}
                     className="w-full flex items-center justify-center space-x-2 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                   >
                     <MicOff className="w-5 h-5" />
@@ -165,7 +165,7 @@ export default function VoiceEnrollment({ onEnrollmentComplete }: VoiceEnrollmen
                 </div>
               )}
 
-              {enrollmentStatus.patient && (
+              {enrollmentStatus.patients && (
                 <div className="text-center py-3 text-green-600">
                   ✓ Patient voice enrolled
                 </div>

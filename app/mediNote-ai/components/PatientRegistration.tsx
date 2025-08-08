@@ -1,77 +1,20 @@
-import React, { useState } from 'react'
+'use client'; // Mark this as a Client Component
+
+import { useState } from 'react';
+import { PatientCreationTypes } from '../types';
 import { APIService } from '../service/api';
-import { Patient } from '../types';
 
-// types.ts (keep your existing types)
-export interface PatientFormData {
-  name: string;
-  email: string;
-  phone: string;
-  date_of_birth: string;
-  medical_record_number: string;
-}
-export interface SearchParams {
-  query: string;
-}
-
-const formFields =  [
-    {
-      id: 'name',
-      name: 'name',
-      label: 'Full Name',
-      type: 'text',
-      required: true,
-      placeholder: 'John Doe'
-    },
-    {
-      id: 'email',
-      name: 'email',
-      label: 'Email',
-      type: 'email',
-      required: true,
-      placeholder: 'john@example.com'
-    },
-    {
-      id: 'phone',
-      name: 'phone',
-      label: 'Phone Number',
-      type: 'tel',
-      required: true,
-      placeholder: '+1234567890'
-    },
-    {
-      id: 'date_of_birth',
-      name: 'date_of_birth',
-      label: 'Date of Birth',
-      type: 'date',
-      required: true
-    },
-    {
-      id: 'medical_record_number',
-      name: 'medical_record_number',
-      label: 'Medical Record Number',
-      type: 'text',
-      required: true,
-      placeholder: 'MRN-12345'
-    }
-]
-
-export default function PatientRegistration({
-  setIsPatient,
-  setRegisterData
-}: {
-  setIsPatient: (value: boolean) => void
-  setRegisterData: (data: Patient | null) => void;
-}) {
-  const [formData, setFormData] = useState<PatientFormData>({
-    name: '',
+export default function PatientForm() {
+  const [formData, setFormData] = useState<PatientCreationTypes>({
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
-    date_of_birth: '',
-    medical_record_number: ''
+    ssn_last4: '',
+    address: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -83,87 +26,141 @@ export default function PatientRegistration({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Convert the date input to full ISO string
-      const formattedDate = formData.date_of_birth 
-        ? new Date(formData.date_of_birth).toISOString()
-        : "";
-
-      const dataToSend = {
-        ...formData,
-        date_of_birth: formattedDate
-      };
-
-      console.log('Submitting:', dataToSend); // Debug log
-
-      const response = await APIService.registerPatient(dataToSend);
-      
-      if (!response) {
-        throw new Error("No response received from server");
-      }
-
-      // Ensure the response matches the Patient type
-      if (!response.id || !response.name) {
-        throw new Error("Invalid patient data received");
-      }
-
-      setIsPatient(true);
-      setRegisterData(response);
-      
-    } catch (error) {
+    setIsSubmitting(true)
+    try{
+    const response = await APIService.registerPatient(formData);
+if (!response) {
+throw new Error("No response received from server");
+}
+setFormData({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    ssn_last4: '',
+    address: ''
+})
+} catch (error) {
       console.error("Registration failed:", error);
       setError(error instanceof Error ? error.message : "Registration failed");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md mt-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Patient Information</h2>
+    <div className="max-w-lg mt-6 mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Patient Registration</h1>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+        <div className={`mb-4 p-3 rounded ${!error ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div className='grid grid-cols-2 gap-4'>
-          {formFields.map((field) => (
-            <div key={field.id} className="mb-4">
-              <label htmlFor={field.id} className="block text-gray-700 mb-2">
-                {field.label}
-              </label>
-              <input
-                type={field.type}
-                id={field.id}
-                name={field.name}
-                value={formData[field.name as keyof PatientFormData] as string}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required={field.required}
-                placeholder={field.placeholder}
-              />
-            </div>
-          ))}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+            First Name
+          </label>
+          <input
+            type="text"
+            id="first_name"
+            name="first_name"
+            value={formData.first_name}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
         </div>
-        
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full py-2 px-4 rounded-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            isLoading 
-              ? 'bg-blue-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }`}
-        >
-          {isLoading ? 'Processing...' : 'Submit'}
-        </button>
+
+        <div>
+          <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+            Last Name
+          </label>
+          <input
+            type="text"
+            id="last_name"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+            Phone
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="ssn_last4" className="block text-sm font-medium text-gray-700">
+            Last 4 digits of SSN
+          </label>
+          <input
+            type="text"
+            id="ssn_last4"
+            name="ssn_last4"
+            value={formData.ssn_last4}
+            onChange={handleChange}
+            pattern="\d{4}"
+            maxLength={4}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+            Address
+          </label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit'}
+          </button>
+        </div>
       </form>
     </div>
-  )
+  );
 }
