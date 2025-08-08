@@ -1,95 +1,118 @@
-import React, { useState, useEffect } from "react"
-import { patient, PatientCreationTypes } from "../types"
-import UserCard from "./UserCard"
-import { APIService } from "../service/api"
-import { UpdateUserModal } from "./UpdateUserModal"
-import { PatientVoiceEnroll } from "./PatientVoiceEnroll"
+import React, { useState, useEffect, useCallback } from "react";
+import { patient, PatientCreationTypes } from "../types";
+import UserCard from "./UserCard";
+import { APIService } from "../service/api";
+import { UpdateUserModal } from "./UpdateUserModal";
+import { PatientVoiceEnroll } from "./PatientVoiceEnroll";
 
 interface ApiResponse {
-  results: patient[]
+  results: patient[];
 }
 
 const SearchPatient: React.FC = () => {
-  const [users, setUsers] = useState<patient[]>([])
-  const [loading, setLoading] = useState(false) // Start with false since we're not loading initially
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState<string>("")
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<patient | null>(null)
-  const [hasSearched, setHasSearched] = useState(false) // Track if a search has been performed
+  const [users, setUsers] = useState<patient[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<patient | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Memoized fetchUsers function
+  const fetchUsers = useCallback(async () => {
+    if (!searchQuery.trim()) {
+      setUsers([]);
+      setHasSearched(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data: ApiResponse = await APIService.SearchPatient(searchQuery);
+      if (!data) {
+        setError("Something went wrong");
+        throw new Error("No response received from server");
+      } else {
+        setUsers(data.results);
+        setHasSearched(true);
+        setLoading(false);
+        setError(null);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(`Failed to fetch users: ${err.message}`);
+      } else {
+        setError("Failed to fetch users");
+      }
+      setLoading(false);
+      setHasSearched(true);
+    }
+  }, [searchQuery]);
 
   // Debounce search input
   useEffect(() => {
     const timerId = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery)
-    }, 500)
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
 
     return () => {
-      clearTimeout(timerId)
-    }
-  }, [searchQuery])
-
-  const fetchUsers = async () => {
-    if (!searchQuery.trim()) {
-      setUsers([])
-      setHasSearched(false)
-      return
-    }
-
-    try {
-      setLoading(true)
-      const data: ApiResponse = await APIService.SearchPatient(searchQuery)
-      if (!data) {
-        setError("Something went wrong")
-        throw new Error("No response received from server")
-      } else {
-        setUsers(data.results)
-        setHasSearched(true)
-        setLoading(false)
-        setError(null)
-      }
-    } catch (err) {
-      setError("Failed to fetch users")
-      setLoading(false)
-      setHasSearched(true)
-    }
-  }
+      clearTimeout(timerId);
+    };
+  }, [searchQuery]);
 
   // Fetch users with search query
   useEffect(() => {
-    fetchUsers()
-  }, [debouncedSearchQuery])
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        await fetchUsers();
+      } catch (err) {
+        if (isMounted) {
+          setError("Failed to fetch users");
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [debouncedSearchQuery, fetchUsers]);
 
   const handleUpdate = (userData: patient) => {
     if (userData) {
-      setSelectedUser(userData)
-      setIsModalOpen(true)
+      setSelectedUser(userData);
+      setIsModalOpen(true);
     }
-  }
+  };
 
   const handleEnrollVoice = (userId: number) => {
-    setIsVoiceModalOpen(true)
-    console.log(`Enroll voice for user with ID: ${userId}`)
-  }
+    setIsVoiceModalOpen(true);
+    console.log(`Enroll voice for user with ID: ${userId}`);
+  };
 
   const handleSave = async (updatedData: PatientCreationTypes) => {
-    if (!selectedUser) return
+    if (!selectedUser) return;
     try {
-      const response = await APIService.updatePatient(updatedData, 3)
+      const response = await APIService.updatePatient(updatedData, selectedUser.id);
       if (!response) {
-        alert("failed to update")
+        alert("Failed to update patient");
       } else {
-        fetchUsers()
-        setSelectedUser(null)
-        alert("User updated successfully!")
+        await fetchUsers();
+        setSelectedUser(null);
+        setIsModalOpen(false);
+        alert("Patient updated successfully!");
       }
     } catch (error) {
-      console.error("Registration failed:", error)
-      setError(error instanceof Error ? error.message : "Registration failed")
+      console.error("Update failed:", error);
+      setError(error instanceof Error ? error.message : "Update failed");
     }
-  }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -152,7 +175,7 @@ const SearchPatient: React.FC = () => {
           </div>
         )}
 
-        {/* User Cards Grid - Only show when there's a search query */}
+        {/* User Cards Grid */}
         {!loading && !error && hasSearched && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {users.length > 0 ? (
@@ -161,20 +184,20 @@ const SearchPatient: React.FC = () => {
                   key={user.id}
                   user={user}
                   onUpdate={() => handleUpdate(user)}
-                  onEnrollVoice={handleEnrollVoice}
+                  onEnrollVoice={() => handleEnrollVoice(user.id)}
                 />
               ))
             ) : (
               <div className="col-span-full text-center py-8">
                 <p className="text-gray-500">
-                  No users found matching your search
+                  No patients found matching your search
                 </p>
               </div>
             )}
           </div>
         )}
 
-        {/* Initial empty state - shown when no search has been performed */}
+        {/* Initial empty state */}
         {!loading && !error && !hasSearched && (
           <div className="col-span-full text-center py-8">
             <p className="text-gray-500">
@@ -199,16 +222,17 @@ const SearchPatient: React.FC = () => {
             onSave={handleSave}
           />
         )}
+
         {isVoiceModalOpen && (
           <PatientVoiceEnroll
             isOpen={isVoiceModalOpen}
             onClose={() => setIsVoiceModalOpen(false)}
-            id={4}
+            id={selectedUser?.id || 0}
           />
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SearchPatient
+export default SearchPatient;
