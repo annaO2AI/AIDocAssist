@@ -5,7 +5,7 @@ import { patient } from '../types';
 interface UserCardProps {
   user: patient;
   onUpdate: (userId: number) => void;
-  onEnrollVoice: (userId: number) => void;
+  onEnrollVoice: (userId: patient) => void;
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user, onUpdate, onEnrollVoice }) => {
@@ -22,7 +22,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onUpdate, onEnrollVoice }) =>
 
   const handleEnrollVoice = () => {
     setShowMenu(false);
-    onEnrollVoice(user.id);
+    onEnrollVoice(user);
   };
 
   return (

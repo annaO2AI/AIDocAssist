@@ -19,17 +19,17 @@ export function useWebSocket({ sessionId, onMessage, onConnectionChange }: UseWe
 
    const connect = useCallback(() => {
     // Cleanup any existing connection
-    if (wsRef.current) {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.close();
-      wsRef.current = null;
     }
+    wsRef.current = null;
 
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
 
-    const wsUrl = `wss://doc-assistant-api.azurewebsites.net/ws/transcribe/${sessionId}`;
+    const wsUrl = `wss://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net/ws/transcribe/19/1/1`;
     
     try {
       const ws = new WebSocket(wsUrl);

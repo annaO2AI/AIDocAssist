@@ -96,6 +96,7 @@ static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
     const response = await fetch(`${API_SERVICE}/patients/create`, {
       method: "POST",
       headers: {
+        'accept': 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(patientData)
@@ -103,12 +104,13 @@ static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      console.log(errorData)
+      throw new Error(errorData?.message || 'Registration failed');
     }
 
     return await response.json();
   } catch (error) {
     console.error('Registration error:', error);
+    throw error;
   }
 }
 
@@ -170,6 +172,114 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
 
       return await response.json();
     } catch (error) {
+      throw error;
+    }
+  }
+
+
+  static async enrollDoctorVoice(audioFile: File): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('file', audioFile);
+      const response = await fetch(`${API_SERVICE}/doctors/register_voice/0`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response?.ok) {
+        throw new Error(`Doctor voice enrollment failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async checkPatientVoiceExists(patientId: number | string | boolean): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/patients/voice_exists?query=${patientId}`, {
+        method: "GET",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Voice exists check error:', error);
+    }
+  }
+
+  static async startSession() {
+    try {
+      const response = await fetch(`${API_SERVICE}/session/start?doctor_id=1&patient_id=1`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Session start failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Session start error:', error);
+      throw error;
+    }
+  }
+
+  static async endSession(sessionId: string | number): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/session/end?session_id=${sessionId}`, {
+        method: "POST",
+        headers: {
+          'accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Session end failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Session end error:', error);
+      throw error;
+    }
+  }
+
+  static async generateSummary(full_text: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/summary/generate`, {
+        method: "POST",
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ full_text }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Summary generation failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Summary generation error:', error);
       throw error;
     }
   }

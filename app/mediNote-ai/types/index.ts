@@ -21,7 +21,7 @@ export interface VoiceEnrollmentResponse {
 
 // WebSocket/Real-time Types
 export interface TranscriptMessage {
-  type: 'transcript_update' | 'processing' | 'keepalive' | 'error';
+  type: 'transcript_update' | 'processing' | 'keepalive' | 'error' | 'transcript' | 'binary';
   speaker?: 'doctor' | 'patient';
   text?: string;
   timestamp?: string;
@@ -29,6 +29,8 @@ export interface TranscriptMessage {
   error?: string;
   is_final?: boolean;
   confidence?: number;
+  data:string,
+  isFinal:boolean
 }
 
 export interface ConversationEntry {
@@ -140,4 +142,30 @@ export interface PatientCreationTypes {
 export interface patient extends PatientCreationTypes{
   id: number;
   voice_enrolled: number;
+}
+
+
+export interface Session {
+  session_id: number;
+  doctor_id: number;
+  patient_id: number;
+  started_at: string;
+  ended_at: string | null;
+  status: 'active' | 'ended';
+}
+
+export interface Summary {
+  summary_id: string;
+  session_id: number;
+  title?: string;
+  content: string;
+  status: 'queued' | 'processing' | 'complete' | 'error';
+  final_content?: string;
+  tags?: string[];
+}
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
