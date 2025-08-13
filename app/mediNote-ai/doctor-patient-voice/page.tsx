@@ -9,7 +9,6 @@ import Breadcrumbs from "../../components/dashboard/Breadcrumbs"; // Import Brea
 import EnrollDoctorVoice from "./EnrollDoctorVoice";
 import CheckPatientVoice from "./CheckPatientVoice";
 import StreamTranscript from "./StreamTranscript";
-import SummaryComponent from "../summary/SummaryViewer";
 import { APIService } from "../service/api";
 
 export default function ProcurementSearchPage() {
