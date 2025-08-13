@@ -17,8 +17,8 @@ const navItems = [
 // Define menu items for dropdowns
 const menuItems = [
   {
-    id: "aiSearch",
-    label: "AI Search",
+    id: "AIDocAssist",
+    label: "AIDocAssist",
     icon: AiIcon,
     subItems: [
       { label: "Patient Registration", href: "/mediNote-ai/patient-registration", icon: ArroTabIcon },
