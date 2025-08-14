@@ -10,12 +10,13 @@ import EnrollDoctorVoice from "./EnrollDoctorVoice";
 import CheckPatientVoice from "./CheckPatientVoice";
 import StreamTranscript from "./StreamTranscript";
 import { APIService } from "../service/api";
+import TranscriptionComponent from "../NewTrans/TranscriptionComponent";
 
 export default function ProcurementSearchPage() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
   const [hovered, setHovered] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<number>()
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebar-collapsed");
@@ -64,8 +65,13 @@ export default function ProcurementSearchPage() {
         >
           <main>
           <EnrollDoctorVoice />
-          <CheckPatientVoice handleStartCon={startRecording}/> 
-         {sessionId && <StreamTranscript sessionId={sessionId }/>} 
+          <CheckPatientVoice handleStartCon={startRecording}/>
+          {sessionId && 
+          <TranscriptionComponent
+          sessionId={sessionId}
+        />
+          } 
+         {/* {sessionId && <StreamTranscript sessionId={sessionId }/>}  */}
           </main>
         </div>
       </div>

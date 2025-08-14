@@ -2,6 +2,7 @@ import { HealthResponse, patient, PatientCreationTypes, startConversationPayload
 import { API_BASE_URL_AISEARCH_MediNote, API_ROUTES } from "../../constants/api";
 import { promises } from "dns";
 const API_SERVICE = "https://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net"
+
 export class APIService {
   static async healthCheck(): Promise<HealthResponse> {
     try {
@@ -91,6 +92,7 @@ catch (error) {
   }
 }
 
+
 static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
   try {
     const response = await fetch(`${API_SERVICE}/patients/create`, {
@@ -99,7 +101,8 @@ static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
         'accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(patientData)
+      body: JSON.stringify(patientData),
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -121,6 +124,7 @@ static async SearchPatient(text:string | number | boolean): Promise<any> {
       headers: {
         'Content-Type': 'application/json',
       },
+       credentials: 'include',
     });
 
     if (!response.ok) {
@@ -141,7 +145,8 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
       headers: {
         'Content-Type': 'application/json', 
       },
-      body: JSON.stringify(patientData) 
+      body: JSON.stringify(patientData) ,
+       credentials: 'include',
     });
 
     if (!response.ok) {
@@ -156,14 +161,21 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
 }
 
 
-  static async enrollPatientVoice(id:number, audioFile: File): Promise<any> {
+  static async enrollPatientVoice(id: number, audioFile: File): Promise<any> {
     try {
       const formData = new FormData();
+      formData.append('speaker_id', id.toString());
+      formData.append('role', 'patient');
       formData.append('file', audioFile);
 
-      const response = await fetch(`${API_SERVICE}/audio/enroll?patient_id=${id}`, {
+      const response = await fetch(`${API_SERVICE}/audio/enroll`, {
         method: "POST",
         body: formData,
+        credentials: 'include',
+        headers: {
+          'accept': 'application/json',
+          // Do not set 'Content-Type' header; browser will set it automatically for FormData
+        },
       });
 
       if (!response?.ok) {
@@ -184,6 +196,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
       const response = await fetch(`${API_SERVICE}/doctors/register_voice/0`, {
         method: "POST",
         body: formData,
+         credentials: 'include',
       });
 
       if (!response?.ok) {
@@ -196,13 +209,14 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-  static async checkPatientVoiceExists(patientId: number | string | boolean): Promise<any> {
+  static async checkPatientVoiceExists(patientId: number): Promise<any> {
     try {
-      const response = await fetch(`${API_SERVICE}/patients/voice_exists?query=${patientId}`, {
+      const response = await fetch(`${API_SERVICE}/patients/voice_exists?patient_id=${patientId}`, {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
         },
+         credentials: 'include',
       });
 
       if (!response.ok) {
@@ -223,6 +237,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
         headers: {
           'Content-Type': 'application/json',
         },
+         credentials: 'include',
       });
 
       if (!response.ok) {
@@ -245,6 +260,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
         headers: {
           'accept': 'application/json',
         },
+         credentials: 'include',
       });
 
       if (!response.ok) {
@@ -260,7 +276,109 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-  static async generateSummary(full_text: string): Promise<any> {
+  static async saveSummary(data: {
+    doctor_id: number;
+    patient_id: number;
+    session_id: number;
+    original_text: string;
+    summary_text: string;
+    edited_text?: string;
+}): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/summary/summary/save`, {
+        method: "POST",
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Save summary failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Save summary error:', error);
+      throw error;
+    }
+  }
+  static async getSummaryById(summaryId: number): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/summary/summary/get/${summaryId}`, {
+        method: "GET",
+        headers: {
+          'accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Get summary failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get summary error:', error);
+      throw error;
+    }
+  }
+
+  static async saveFinalSummary(data: { session_id: number; final_content: string; title: string }): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/summary/summary/summary/save`, {
+        method: "POST",
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Save final summary failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Save final summary error:', error);
+      throw error;
+    }
+  }
+
+  static async editSummary(data:{summaryId: number, edited_text: string}): Promise<any> {
+    try {
+      const url = `${API_SERVICE}/summary/summary/edit/${data?.summaryId}?edited_text=${encodeURIComponent(data.edited_text)}`;
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          'accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Edit summary failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Edit summary error:', error);
+      throw error;
+    }
+  }
+    static async generateSummary(full_text: string): Promise<any> {
     try {
       const response = await fetch(`${API_SERVICE}/summary/generate`, {
         method: "POST",
@@ -269,6 +387,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ full_text }),
+         credentials: 'include',
       });
 
       if (!response.ok) {
@@ -283,7 +402,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
       throw error;
     }
   }
-
+  
 }
 
 

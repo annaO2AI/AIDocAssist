@@ -25,32 +25,33 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
     await startRecording()
   }
 
-  const handleStopEnrollment = async () => {
-    const audioBlob = await stopRecording()
-    if (!audioBlob) {
-      setError("Failed to capture audio")
-      return
-    }
-    setIsLoading(true)
-    try {
-      const audioFile = new File([audioBlob], `${id}`, {
-        type: "audio/webm",
-      })
-      const response = await APIService.enrollPatientVoice(id, audioFile)
-      if (response) {
-        onClose()
-      }
-    } catch (err) {
-      setError(
-        `Failed to enroll ${id} voice: ${
-          err instanceof Error ? err.message : "Unknown error"
-        }`
-      )
-    } finally {
-        setIsLoading(false)
-      setEnrollmentStatus(false)
-    }
+const handleStopEnrollment = async () => {
+  const audioBlob = await stopRecording()
+  if (!audioBlob) {
+    setError("Failed to capture audio")
+    return
   }
+  setIsLoading(true)
+  try {
+    // Change file name and type to .wav
+    const audioFile = new File([audioBlob], `${id}.wav`, {
+      type: "audio/wav",
+    })
+    const response = await APIService.enrollPatientVoice(id, audioFile)
+    if (response) {
+      onClose()
+    }
+  } catch (err) {
+    setError(
+      `Failed to enroll ${id} voice: ${
+        err instanceof Error ? err.message : "Unknown error"
+      }`
+    )
+  } finally {
+    setIsLoading(false)
+    setEnrollmentStatus(false)
+  }
+}
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">

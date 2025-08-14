@@ -13,15 +13,12 @@ export default function CheckPatientVoice({handleStartCon}:{
   handleStartCon:(id:number) => void
 }) {
   const [users, setUsers] = useState<PatientCardProps | null>(null)
-  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState<number>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Memoized fetchUsers function
-  const fetchUsers = useCallback(async () => {
-    if (!searchQuery.trim()) {
-      return
-    }
+  const fetchUsers = useCallback(async () => {  
 
     try {
       setLoading(true)
@@ -51,7 +48,7 @@ export default function CheckPatientVoice({handleStartCon}:{
     // Debounce search input
   useEffect(() => {
     const timerId = setTimeout(() => {
-        fetchUsers()
+     searchQuery &&   fetchUsers()
     }, 500);
 
     return () => {
@@ -83,7 +80,7 @@ export default function CheckPatientVoice({handleStartCon}:{
         className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         placeholder="Search patients"
         value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        onChange={(e) => setSearchQuery(Number(e.target.value))}
       />
 
      {users && <ViewPatientList patient={users} handleStartCon={handleStartCon}/>}

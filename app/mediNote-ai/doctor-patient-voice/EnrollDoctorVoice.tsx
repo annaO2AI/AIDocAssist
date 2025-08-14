@@ -28,9 +28,9 @@ export default function EnrollDoctorVoice() {
     }
     setIsLoading(true)
     try {
-      const audioFile = new File([audioBlob], `55`, {
-        type: "audio/webm",
-      })
+     const audioFile = new File([audioBlob], `55.wav`, {
+      type: "audio/wav",
+    })
       const response = await APIService.enrollDoctorVoice(audioFile)
       if (response) {
       }
@@ -60,7 +60,7 @@ export default function EnrollDoctorVoice() {
               //   disabled={!canStartRecording()}
             >
               <Mic className="w-5 h-5" />
-              <span>Enroll Patient Voice</span>
+              <span>Enroll Doctor Voice</span>
             </button>
           ) : (
             <button

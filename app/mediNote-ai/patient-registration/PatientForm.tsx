@@ -1,7 +1,9 @@
 'use client'; // Mark this as a Client Component
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PatientCreationTypes } from '../types';
+// import { APIService } from '../service/api';
+import { decodeJWT } from '@/app/utils/decodeJWT';
 import { APIService } from '../service/api';
 
 export default function PatientForm() {
@@ -15,7 +17,18 @@ export default function PatientForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 const [error, setError] = useState<string | null>(null);
+const [token ,setToken] = useState<string>("")
 
+ useEffect(() => {
+    const cookies = document.cookie.split(";").map((c) => c.trim());
+    const token = cookies
+      .find((c) => c.startsWith("access_token="))
+      ?.split("=")[1]; 
+      if(token){
+        setToken(token)
+      }  
+  }, []);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -28,7 +41,7 @@ const [error, setError] = useState<string | null>(null);
     e.preventDefault();
     setIsSubmitting(true)
     try{
-    const response = await APIService.registerPatient(formData);
+    const response = await APIService.registerPatient(formData)
 if (!response) {
 throw new Error("No response received from server");
 }
