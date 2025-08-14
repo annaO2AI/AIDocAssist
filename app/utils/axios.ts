@@ -104,7 +104,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 const instance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
