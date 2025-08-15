@@ -245,4 +245,19 @@ body {
     border-color: #3C77EF !important;
     box-shadow: 1px 1px 10px #0713b949;
   }
+  .mediNote-widthfix{
+    width: 77%;
+  }
+  .controle-search-AIDocAssist{
+    background-color: #fff;
+    border: 1px solid #4088F4;
+    padding: 10px 15px;
+    border-radius: 10px;
+  }
+  .mediNote-widthfix-warpper{
+    min-height: calc(100vh - 290px);
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+  }
 }

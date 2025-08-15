@@ -1,6 +1,7 @@
 import { APIService } from "../service/api";
 import { useTranscriptionWebSocket } from "./useTranscriptionWebSocket";
 import { useState, useEffect, useCallback } from "react";
+import { StopRecoding, Speeker, AudioLineIcon  } from "../../chat-ui/components/icons"
 
 interface TextCase {
   sessionId: number;
@@ -173,85 +174,142 @@ export default function TranscriptionComponent({ sessionId }: TextCase) {
   }, [fetchSummary]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-50 rounded-lg shadow-md">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Live Transcription</h1>
-        <div className="flex items-center space-x-4">
-          <span className={`h-3 w-3 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
-          <span className="text-sm font-medium">
-            {isConnected ? "Connected" : "Disconnected"}
-          </span>
-        </div>
-      </div>
-
-      {/* Error Display */}
-      {(wsError || apiError) && (
-        <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
-          <p>{wsError || apiError}</p>
-        </div>
-      )}
-
-      {/* Controls */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          disabled={!isConnected}
-          className={`px-4 py-2 rounded-md font-medium ${
-            isRecording ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
-          } text-white ${!isConnected ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          {isRecording ? (
-            <span className="flex items-center">
-              <span className="h-2 w-2 mr-2 bg-white rounded-full animate-pulse" />
-              Stop Recording
-            </span>
-          ) : "Start Recording"}
-        </button>
-
-        <button
-          onClick={connect}
-          disabled={isConnected}
-          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Connect
-        </button>
-
-        <button
-          onClick={disconnect}
-          disabled={!isConnected}
-          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Disconnect
-        </button>
-      </div>
-
-      {/* Transcription Display */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-2 text-gray-700">Transcription</h2>
-        <div className="bg-white p-4 rounded-md border border-gray-200 min-h-40 max-h-96 overflow-y-auto">
-          {transcription.length === 0 ? (
-            <p className="text-gray-500 italic">
-              {isConnected ? "No transcription yet. Start recording to begin." : "Connect to begin transcription."}
-            </p>
-          ) : (
-            transcription.map((msg, i) => (
-              <div
-                key={i}
-                className={`mb-2 p-2 rounded ${
-                  msg.type === "error" ? "bg-red-50 border-l-4 border-red-500" :
-                  msg.type === "Patient" ? "bg-blue-50 border-l-4 border-blue-500" :
-                  "bg-gray-50 border-l-4 border-gray-300"
-                }`}
-              >
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span className="font-medium capitalize">{msg.type}</span>
-                  <span>{formatTime(msg.ts)}</span>
+    <div className="mediNote-widthfix mx-auto rounded-lg px-4">
+      
+      <div className="mediNote-widthfix-warpper">
+        {/* Transcription Display */}
+        <div className="mb-4">
+          <div className="bg-white rounded-md max-h-96 overflow-y-auto">
+            {transcription.length === 0 ? (
+              <p className="text-gray-500 italic">
+                {isConnected ? "No transcription yet. Start recording to begin." : "Connect to begin transcription."}
+              </p>
+            ) : (
+              transcription.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`mb-2 p-2 rounded ${
+                    msg.type === "error" ? "bg-red-50 border-l-4 border-red-500" :
+                    msg.type === "Patient" ? "bg-blue-50 border-l-4 border-blue-500" :
+                    "bg-gray-50 border-l-4 border-gray-300"
+                  }`}
+                >
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span className="font-medium capitalize">{msg.type}</span>
+                    <span>{formatTime(msg.ts)}</span>
+                  </div>
+                  <p className="text-gray-800">{msg.text}</p>
                 </div>
-                <p className="text-gray-800">{msg.text}</p>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
+        </div>
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-4">
+            <span className={`h-3 w-3 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
+            <span className="text-sm font-medium">
+              {isConnected ? "Connected" : "Disconnected"}
+            </span>
+          </div>
+        </div>
+
+        {/* Error Display */}
+        {(wsError || apiError) && (
+          <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
+            <p>{wsError || apiError}</p>
+          </div>
+        )}
+
+        {/* Controls */}
+        <div className="flex flex-wrap gap-3 mb-6 justify-between flex-nowrap controle-search-AIDocAssist h-[90px]">
+          <div className="flex items-center">
+            {/* <button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={!isConnected}
+              className={`px-6 py-4 rounded-md font-medium ${
+                isRecording ? "bg-blue-200 hover:bg-blue-300" : "bg-blue-200 hover:bg-blue-300"
+              } text-white ${!isConnected ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {isRecording ? (
+                <span className="flex items-center">
+                  <Speeker />
+                </span>
+              ) : 
+              <span>
+                <span className="flex items-center bg-blue-200 hover:bg-blue-300">
+                  <Speeker />
+                </span>
+                <AudioLineIcon />
+              </span>
+              }
+            </button> */}
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={!isConnected}
+            >
+              {isRecording ? (
+                <span className="flex gap-3 items-center">
+                <span className=" px-6 py-4 rounded-md font-medium flex items-center bg-blue-200 hover:bg-blue-300">
+                  <Speeker />
+                </span>
+                <AudioLineIcon />
+              </span>
+              ) : 
+              <span className="flex gap-3 items-center">
+                <span className=" px-6 py-4 rounded-md font-medium flex items-center bg-blue-200 hover:bg-blue-300">
+                  <Speeker />
+                </span>
+              </span>
+              }
+            </button>
+          </div>
+          <div className="flex gap-2 items-center">
+            {/* <button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={!isConnected}
+              className={`px-4 py-2 rounded-md font-medium ${
+                isRecording ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
+              } text-white ${!isConnected ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {isRecording ? (
+                <span className="flex items-center">
+                  <span className="h-2 w-2 mr-2 bg-white rounded-full animate-pulse" />
+                  Stop Recording
+                </span>
+              ) : "Start Recording"}
+            </button> */}
+
+            {/* <button
+              onClick={connect}
+              disabled={isConnected}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Connect
+            </button> */}
+
+            {/* <button
+              onClick={disconnect}
+              disabled={!isConnected}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Disconnect
+            </button> */}
+
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={!isConnected}
+              className={`rounded-md font-medium h-[44px] ${
+                isRecording ? "bg-white-500 hover:bg-white-600" : "px-4 py-2  bg-blue-500 hover:bg-blue-600"
+              } text-white ${!isConnected ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {isRecording ? (
+                <span className="flex items-center">
+                    <StopRecoding />
+                </span>
+              ) : "Start Recording"}
+            </button>
+          </div>
         </div>
       </div>
 

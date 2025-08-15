@@ -6,7 +6,7 @@ import Sidebar from "../../components/dashboard/Sidebar";
 import { DashboardProvider } from "../../context/DashboardContext";
 import HeaderAISearch from "../../chat-ui/components/Header";
 import Breadcrumbs from "../../components/dashboard/Breadcrumbs"; // Import Breadcrumbs component
-import EnrollDoctorVoice from "./EnrollDoctorVoice";
+
 import CheckPatientVoice from "./CheckPatientVoice";
 import StreamTranscript from "./StreamTranscript";
 import { APIService } from "../service/api";
@@ -64,14 +64,14 @@ export default function ProcurementSearchPage() {
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
           <main>
-          <EnrollDoctorVoice />
-          <CheckPatientVoice handleStartCon={startRecording}/>
-          {sessionId && 
-          <TranscriptionComponent
-          sessionId={sessionId}
-        />
-          } 
-         {/* {sessionId && <StreamTranscript sessionId={sessionId }/>}  */}
+            <div className="enrollDoctorVoice"> 
+               
+                <CheckPatientVoice handleStartCon={startRecording}/>
+                {sessionId && 
+                <TranscriptionComponent sessionId={sessionId}/>
+                } 
+              {/* {sessionId && <StreamTranscript sessionId={sessionId }/>}  */}
+            </div> 
           </main>
         </div>
       </div>
