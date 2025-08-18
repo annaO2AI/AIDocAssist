@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { APIService } from "../service/api"
 import { useSearchParams } from "next/navigation"
-import MedicalConsultationInterface from "./Summary"
+import SummaryGenerator from "./Summary"
 
 export default function TranscriptionSummaryPage() {
   const searchParams = useSearchParams()
@@ -149,7 +149,7 @@ export default function TranscriptionSummaryPage() {
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
           <main>
-            <MedicalConsultationInterface 
+            <SummaryGenerator 
               handleSaveAsDraft={handleSaveSummary} 
               handleApproveSummary={handleApproveSummary}
             />

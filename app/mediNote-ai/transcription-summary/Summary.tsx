@@ -10,7 +10,7 @@ import {
   FileText,
 } from "lucide-react"
 
-const MedicalConsultationInterface = ({
+const SummaryGenerator = ({
   handleSaveAsDraft,
   handleApproveSummary
 }: {
@@ -265,4 +265,4 @@ const MedicalConsultationInterface = ({
   )
 }
 
-export default MedicalConsultationInterface
+export default SummaryGenerator
