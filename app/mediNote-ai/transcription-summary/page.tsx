@@ -15,63 +15,67 @@ export default function TranscriptionSummaryPage() {
   const [collapsed, setCollapsed] = useState(true)
   const [hovered, setHovered] = useState(false)
 
-  const patientId =  2;
-  console.log(sessionId,"sessionId", searchParams.get("session_id"))
+  const patientId = 2;
+  console.log(sessionId, "sessionId", searchParams.get("session_id"))
+  
   const toggleCollapse = () => {
     const newCollapsed = !collapsed
     localStorage.setItem("sidebar-collapsed", String(newCollapsed))
     setCollapsed(newCollapsed)
   }
+  
   const isSidebarExpanded = !collapsed || hovered
   const sidebarWidth = isSidebarExpanded ? 256 : 64
   const showSidebar = true
 
   const [apiError, setApiError] = useState("")
+  
   // Handle API errors consistently
   const handleApiError = useCallback((error: unknown, context: string) => {
     const errorMessage =
       error instanceof Error ? error.message : "An unknown error occurred"
-
     setApiError(`${context}: ${errorMessage}`)
     console.error(`${context} error:`, error)
   }, [])
 
-  const fetchTranscript = useCallback(async() => {
-    try{
-
+  const fetchTranscript = useCallback(async () => {
+    try {
       const transcript = await APIService.getTranscript(sessionId)
       console.log(transcript)
-    }catch (err) {
+      return transcript
+    } catch (err) {
       handleApiError(err, "Failed to fetch Transcript")
+      throw err
     } 
-  },[sessionId, handleApiError])
+  }, [sessionId, handleApiError])
 
   const fetchSummary = useCallback(async () => {
     try {
       const data = await APIService.getSummaryById(sessionId)
+      return data
     } catch (err) {
       handleApiError(err, "Failed to fetch summary")
-    } finally {
+      throw err
     }
   }, [sessionId, handleApiError])
 
   useEffect(() => {
- if(sessionId !== 0){
-     fetchTranscript()
-    fetchSummary()
- }
-  }, [sessionId])
+    if (sessionId !== 0) {
+      fetchTranscript()
+      fetchSummary()
+    }
+  }, [sessionId, fetchSummary, fetchTranscript])
 
   // Generate summary handler
   const handleGenerateSummary = useCallback(async () => {
     try {
       setApiError("")
-
       const transcriptionText = ""
       const data = await APIService.generateSummary(transcriptionText)
+      return data
     } catch (err) {
       handleApiError(err, "Failed to generate summary")
-    } finally {
+      throw err
     }
   }, [handleApiError])
 
@@ -79,7 +83,6 @@ export default function TranscriptionSummaryPage() {
   const handleSaveSummary = useCallback(async () => {
     try {
       setApiError("")
-
       const data = await APIService.saveSummary({
         doctor_id: 0,
         patient_id: patientId,
@@ -87,29 +90,28 @@ export default function TranscriptionSummaryPage() {
         original_text: "",
         summary_text: "",
       })
-
       alert("Summary saved successfully!")
+      return data
     } catch (err) {
       handleApiError(err, "Failed to save summary")
-    } finally {
+      throw err
     }
-  }, [sessionId, handleApiError])
+  }, [sessionId, handleApiError, patientId])
 
   // Approve summary handler
   const handleApproveSummary = useCallback(async () => {
     try {
       setApiError("")
-
       const data = await APIService.saveFinalSummary({
         session_id: sessionId,
         final_content: "",
         title: `Session ${sessionId} Summary`,
       })
-
       alert("Summary approved successfully!")
+      return data
     } catch (err) {
       handleApiError(err, "Failed to approve summary")
-    } finally {
+      throw err
     }
   }, [sessionId, handleApiError])
 
@@ -117,16 +119,15 @@ export default function TranscriptionSummaryPage() {
   const handleUpdateSummary = useCallback(async () => {
     try {
       setApiError("")
-
       const data = await APIService.editSummary({
         summaryId: 1,
         edited_text: "",
       })
-
       alert("Summary updated successfully!")
+      return data
     } catch (err) {
       handleApiError(err, "Failed to update summary")
-    } finally {
+      throw err
     }
   }, [handleApiError])
 
@@ -148,7 +149,10 @@ export default function TranscriptionSummaryPage() {
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
           <main>
-            <MedicalConsultationInterface handleSaveAsDraft={handleSaveSummary} handleApproveSummary={handleApproveSummary}/>
+            <MedicalConsultationInterface 
+              handleSaveAsDraft={handleSaveSummary} 
+              handleApproveSummary={handleApproveSummary}
+            />
           </main>
         </div>
       </div>

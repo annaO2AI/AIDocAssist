@@ -141,15 +141,15 @@ const MedicalConsultationInterface = ({
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Summary</h2>
         <p className="text-gray-700 text-sm leading-relaxed">
           The combined summary for Dr. Rachel and Mr. Davis reveals a medical
-          consultation where the doctor noted the patient's chest discomfort
+          consultation where the doctor noted the patient&apos;s chest discomfort
           over the past few days and conducted a detailed inquiry into the panic
           nature. This issue resolved in establishing a comprehensive
-          understanding of the patient's current health status. Mr. Davis, a
+          understanding of the patient&apos;s current health status. Mr. Davis, a
           48-year-old with a history of hypertension and Type 2 Diabetes,
           reported this as his first noticeable episode and confirmed a family
           history of heart attack, prompting Dr. Rachel to schedule an ECG and
           blood tests to investigate potential angina. The doctor plans to
-          review the results and determine the next steps, while the patient's
+          review the results and determine the next steps, while the patient&apos;s
           ongoing medications, Amlodipine for hypertension and Metformin for
           diabetes, were noted with specific dosages and start dates. This
           proactive approach aims to address the symptoms and underlying risks,
@@ -174,7 +174,7 @@ const MedicalConsultationInterface = ({
               </div>
               <p className="text-sm text-gray-600 mb-3">Dr. Rachel</p>
               <p className="text-sm text-gray-700 leading-relaxed">
-                Noted patient's chest discomfort over the past few days.
+                Noted patient&apos;s chest discomfort over the past few days.
                 Inquired about pain description (sharp, dull, ache) and
                 shortness of breath. Asked about prior occurrence and family
                 history of heart conditions. Scheduled ECC and blood tests based

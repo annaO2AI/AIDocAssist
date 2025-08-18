@@ -86,7 +86,7 @@ export function useWebSocket({ sessionId, onMessage, onConnectionChange }: UseWe
         connect();
       }
     }
-  }, [sessionId, onMessage, onConnectionChange]);
+  }, [ onMessage, onConnectionChange]);
 
   const sendAudioChunk = useCallback((audioData: Blob) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
