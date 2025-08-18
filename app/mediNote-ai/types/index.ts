@@ -169,3 +169,15 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
 }
+
+export interface SummaryData {
+  success: boolean;
+  session_id: number;
+  summary_id: number;
+  status: 'draft' | 'approved' | string; // Add more known statuses if applicable
+  title: string;
+  content: string;
+  created_at: string;  // ISO 8601 date string
+  approved_at: string | null;
+  file_path: string | null;
+}

@@ -101,12 +101,12 @@ const SearchPatient: React.FC = () => {
     try {
       const response = await APIService.updatePatient(updatedData, selectedUser.id);
       if (!response) {
-        alert("Failed to update patient");
+        // alert("Failed to update patient");
       } else {
         await fetchUsers();
         setSelectedUser(null);
         setIsModalOpen(false);
-        alert("Patient updated successfully!");
+        // alert("Patient updated successfully!");
       }
     } catch (error) {
       console.error("Update failed:", error);

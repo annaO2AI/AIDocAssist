@@ -26,7 +26,7 @@ export class APIService {
       const formData = new FormData();
       formData.append('file', audioFile);
 
-      const response = await fetch(`https://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net/${speakerType}/register_voice`, {
+      const response = await fetch(`${API_SERVICE}/${speakerType}/register_voice`, {
         method: "POST",
         body: formData,
       });
@@ -285,7 +285,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     edited_text?: string;
 }): Promise<any> {
     try {
-      const response = await fetch(`${API_SERVICE}/summary/summary/save`, {
+      const response = await fetch(`${API_SERVICE}/summary/summary/summary/save`, {
         method: "POST",
         headers: {
           'accept': 'application/json',
@@ -309,7 +309,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
   }
   static async getSummaryById(summaryId: number): Promise<any> {
     try {
-      const response = await fetch(`${API_SERVICE}/summary/summary/get/${summaryId}`, {
+      const response = await fetch(`${API_SERVICE}/summary/summary/summary/get/${summaryId}`, {
         method: "GET",
         headers: {
           'accept': 'application/json',
@@ -330,9 +330,9 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-  static async saveFinalSummary(data: { session_id: number; final_content: string; title: string }): Promise<any> {
+  static async saveFinalSummary(data: { session_id: number}): Promise<any> {
     try {
-      const response = await fetch(`${API_SERVICE}/summary/summary/summary/save`, {
+      const response = await fetch(`${API_SERVICE}/summary/summary/summary/approve`, {
         method: "POST",
         headers: {
           'accept': 'application/json',
@@ -357,12 +357,15 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
 
   static async editSummary(data:{summaryId: number, edited_text: string}): Promise<any> {
     try {
-      const url = `${API_SERVICE}/summary/summary/edit/${data?.summaryId}?edited_text=${encodeURIComponent(data.edited_text)}`;
+      const url = `${API_SERVICE}/summary/summary/summary/edit/${data?.summaryId}`
       const response = await fetch(url, {
         method: "PUT",
         headers: {
           'accept': 'application/json',
         },
+        body:JSON.stringify({
+          summary_text:data.edited_text
+        }),
         credentials: 'include',
       });
 
@@ -427,6 +430,47 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     throw error;
   }
 }
+
+
+static async getPatientHistory(patientId: number): Promise<any> {
+    const response = await fetch(`${API_SERVICE}/patients/history/${patientId}`, {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json'
+      },
+       credentials: "include",
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
+   static async transcribeFromFile(formData:any): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/transcribe/from-file`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          'accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Transcription failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Transcription error:', error);
+      throw error;
+    }
+  }
 
 }
 

@@ -91,7 +91,7 @@ export default function TranscriptionSummaryPage() {
         original_text: "",
         summary_text: "",
       })
-      alert("Summary saved successfully!")
+      // alert("Summary saved successfully!")
       return data
     } catch (err) {
       handleApiError(err, "Failed to save summary")
@@ -105,10 +105,8 @@ export default function TranscriptionSummaryPage() {
       setApiError("")
       const data = await APIService.saveFinalSummary({
         session_id: sessionId,
-        final_content: "",
-        title: `Session ${sessionId} Summary`,
       })
-      alert("Summary approved successfully!")
+      // alert("Summary approved successfully!")
       return data
     } catch (err) {
       handleApiError(err, "Failed to approve summary")
@@ -124,7 +122,7 @@ export default function TranscriptionSummaryPage() {
         summaryId: 1,
         edited_text: "",
       })
-      alert("Summary updated successfully!")
+      // alert("Summary updated successfully!")
       return data
     } catch (err) {
       handleApiError(err, "Failed to update summary")

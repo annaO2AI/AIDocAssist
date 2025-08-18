@@ -1,70 +1,73 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { APIService } from "../service/api";
-import ViewPatientList from "./ViewPatientList";
-import EnrollDoctorVoice from "./EnrollDoctorVoice";
+import React, { useCallback, useEffect, useState } from "react"
+import { APIService } from "../service/api"
+import ViewPatientList from "./ViewPatientList"
+import EnrollDoctorVoice from "./EnrollDoctorVoice"
+import PatientHistory from "./PatientHistory"
 
 interface PatientCardProps {
-  patient_id: number;
-  name: string;
-  voice_file: string;
-  exists: boolean;
+  patient_id: number
+  name: string
+  voice_file: string
+  exists: boolean
 }
 
 export default function CheckPatientVoice({
   handleStartCon,
 }: {
-  handleStartCon: (id: number) => void;
+  handleStartCon: (id: number) => void
 }) {
-  const [users, setUsers] = useState<PatientCardProps | null>(null);
-  const [searchQuery, setSearchQuery] = useState<number>(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showPatientList, setShowPatientList] = useState(true); // New state to control ViewPatientList visibility
+  const [users, setUsers] = useState<PatientCardProps | null>(null)
+  const [searchQuery, setSearchQuery] = useState<number>(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showPatientList, setShowPatientList] = useState(true) // New state to control ViewPatientList visibility
+  const [selectedPatientId, setSelectedPatientId] =
+    useState<number>(searchQuery)
 
   // Memoized fetchUsers function
   const fetchUsers = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoading(true)
       const data: PatientCardProps = await APIService.checkPatientVoiceExists(
         searchQuery
-      );
+      )
       if (!data) {
-        setError("Something went wrong");
-        throw new Error("No response received from server");
+        setError("Something went wrong")
+        throw new Error("No response received from server")
       } else {
-        setUsers(data);
-        setLoading(false);
-        setError(null);
-        setShowPatientList(true); // Ensure list is shown when new data is fetched
+        setUsers(data)
+        setLoading(false)
+        setError(null)
+        setShowPatientList(true) // Ensure list is shown when new data is fetched
       }
     } catch (err) {
       if (err instanceof Error) {
-        setError(`Failed to fetch users: ${err.message}`);
+        setError(`Failed to fetch users: ${err.message}`)
       } else {
-        setError("Failed to fetch users");
+        setError("Failed to fetch users")
       }
-      setLoading(false);
+      setLoading(false)
     }
-  }, [searchQuery]);
+  }, [searchQuery])
 
-  console.log({ users });
+  console.log({ users })
 
   // Debounce search input
   useEffect(() => {
     const timerId = setTimeout(() => {
-      searchQuery && fetchUsers();
-    }, 500);
+      searchQuery && fetchUsers()
+    }, 500)
 
     return () => {
-      clearTimeout(timerId);
-    };
-  }, [searchQuery, fetchUsers]);
+      clearTimeout(timerId)
+    }
+  }, [searchQuery, fetchUsers])
 
   // Function to handle Start Session button click
   const handleStartSession = (patientId: number) => {
-    setShowPatientList(false); // Hide ViewPatientList
-    handleStartCon(patientId); // Call the original handleStartCon function
-  };
+    setShowPatientList(false) // Hide ViewPatientList
+    handleStartCon(patientId) // Call the original handleStartCon function
+  }
 
   return (
     <div className="Patient-voice mx-auto mb-6 mediNote-widthfix pl-4 mt-16">
@@ -95,9 +98,24 @@ export default function CheckPatientVoice({
         </div>
         <EnrollDoctorVoice />
       </div>
-      {users && showPatientList && (
-        <ViewPatientList patient={users} handleStartCon={handleStartSession} />
-      )}
+
+      <div>
+        <div className="flex ">
+          <div className="w-3/5 ">
+            {users && showPatientList && (
+              <ViewPatientList
+                patient={users}
+                handleStartCon={handleStartSession}
+              />
+            )}
+          </div>
+          <div className="w-2/5 ">
+            {selectedPatientId && (
+              <PatientHistory patientId={selectedPatientId} />
+            )}
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }

@@ -27,14 +27,15 @@ const ViewPatientList = ({
             <div className="font-bold text-xl text-gray-800 mb-2">
               {patient.name}
             </div>
-            <p className="text-gray-600 text-sm">Patient ID: {patient.patient_id}</p>
+            <p className="text-gray-600 text-sm py-2">Patient ID: {patient.patient_id}</p>
+            <p className="text-gray-600 text-sm py-2">Patient Voice Exists: {patient.exists ? "Exists" : "Not exists"}</p>
           </div>
           <div>
             <span
               className={`inline-block px-3 py-1 text-xs font-semibold ${
                 patient.exists
-                  ? "text-green-800 bg-green-100"
-                  : "text-red-800 bg-red-100"
+                  ? "text-green-800 "
+                  : "text-red-800 "
               }`}
             >
               {patient.exists ? "Active" : "Inactive"}
