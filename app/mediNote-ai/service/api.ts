@@ -230,9 +230,9 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-  static async startSession() {
+  static async startSession(patientId:number) {
     try {
-      const response = await fetch(`${API_SERVICE}/session/start?doctor_id=1&patient_id=1`, {
+      const response = await fetch(`${API_SERVICE}/session/start?doctor_id=0&patient_id=${patientId}`, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -402,7 +402,32 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
       throw error;
     }
   }
-  
+  static async getTranscript(sessionId: number): Promise<any> {
+  try {
+    const response = await fetch(
+      `${API_SERVICE}/session/transcript/${sessionId}`,
+      {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+        },
+        credentials: "include", // if your API uses cookies / auth
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      console.error('Transcript fetch error data:', errorData);
+      throw new Error(`Transcript fetch failed: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Transcript fetch error:", error);
+    throw error;
+  }
+}
+
 }
 
 

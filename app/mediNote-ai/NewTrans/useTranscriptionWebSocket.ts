@@ -1,6 +1,5 @@
 // hooks/useTranscriptionWebSocket.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
-
 interface TranscriptionMessage {
   type: 'Doctor' | 'Patient' | 'error';
   text?: string;
@@ -205,7 +204,7 @@ export const useTranscriptionWebSocket = ({
   }, [sendAudioChunk]);
 
   // Stop recording
-  const stopRecording = useCallback(() => {
+  const stopRecording = useCallback(async() => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
@@ -214,8 +213,7 @@ export const useTranscriptionWebSocket = ({
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
-    }
-
+    }     
     setIsRecording(false);
     console.log('Recording stopped');
   }, []);

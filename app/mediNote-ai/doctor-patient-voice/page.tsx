@@ -8,7 +8,6 @@ import HeaderAISearch from "../../chat-ui/components/Header";
 import Breadcrumbs from "../../components/dashboard/Breadcrumbs"; // Import Breadcrumbs component
 
 import CheckPatientVoice from "./CheckPatientVoice";
-import StreamTranscript from "./StreamTranscript";
 import { APIService } from "../service/api";
 import TranscriptionComponent from "../NewTrans/TranscriptionComponent";
 
@@ -17,6 +16,7 @@ export default function ProcurementSearchPage() {
   const [collapsed, setCollapsed] = useState(true);
   const [hovered, setHovered] = useState(false);
   const [sessionId, setSessionId] = useState<number>()
+  const [patientId, setPatientId]= useState<number>()
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebar-collapsed");
@@ -35,11 +35,12 @@ export default function ProcurementSearchPage() {
   // Show sidebar on the talent-acquisition page
    const showSidebar =  pathname === "/mediNote-ai/doctor-patient-voice" ;
 
-     const startRecording = async (id:number) => {
+     const startRecording = async (patientId:number) => {
        try {
-         const data = await APIService.startSession()
+         const data = await APIService.startSession(patientId)
          if (data) {
            setSessionId(data?.session_id)
+           setPatientId(patientId)
          }
        } catch (error) {
          console.log("Failed to start recording:", error)
@@ -67,8 +68,8 @@ export default function ProcurementSearchPage() {
             <div className="enrollDoctorVoice"> 
                
                 <CheckPatientVoice handleStartCon={startRecording}/>
-                {sessionId && 
-                <TranscriptionComponent sessionId={sessionId}/>
+                {sessionId && patientId&&
+                <TranscriptionComponent sessionId={sessionId} patientId={patientId} />
                 } 
               {/* {sessionId && <StreamTranscript sessionId={sessionId }/>}  */}
             </div> 
