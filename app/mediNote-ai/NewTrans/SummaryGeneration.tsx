@@ -1,9 +1,8 @@
 "use client"
 import { useCallback, useEffect, useState } from "react"
-import { Play, Pause, Edit, Calendar, User, Stethoscope, FileText } from "lucide-react"
+import { Play, Pause, Edit, CheckCircle, FileText } from "lucide-react"
 import { APIService } from "../service/api"
 import { SummaryData } from "../types"
-import toast from "react-hot-toast"
 
 type TextCase = {
   sessionId: number
@@ -18,6 +17,7 @@ export default function SummaryGeneration({ sessionId, patientId }: TextCase) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [notification, setNotification] = useState<{message: string, show: boolean}>({message: '', show: false})
 
   const handleApiError = useCallback((error: unknown, context: string) => {
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
@@ -25,13 +25,10 @@ export default function SummaryGeneration({ sessionId, patientId }: TextCase) {
     console.error(`${context} error:`, error)
   }, [])
 
-  // Format time for audio player
-  const formatTime = useCallback((seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`
-  }, [])
-
+  const showNotification = (message: string) => {
+    setNotification({message, show: true})
+    setTimeout(() => setNotification({message: '', show: false}), 3000)
+  }
   // Fetch summary data
   const fetchSummary = useCallback(async (sessionId: number) => {
     try {
@@ -96,7 +93,7 @@ export default function SummaryGeneration({ sessionId, patientId }: TextCase) {
         original_text: summary.content,
         summary_text: editedSummary,
       })
-       toast.success("Summary saved successfully!") 
+    showNotification("Summary saved successfully!")
     //   alert("Summary saved successfully!")
       return data
     } catch (err) {
@@ -113,8 +110,8 @@ export default function SummaryGeneration({ sessionId, patientId }: TextCase) {
       const data = await APIService.saveFinalSummary({
         session_id: sessionId,
       })
-      toast.success("Summary approved successfully!")
-    //   alert("Summary approved successfully!")
+      showNotification("Summary approved successfully!")
+  //   alert("Summary approved successfully!")
       return data
     } catch (err) {
       handleApiError(err, "Failed to approve summary")
@@ -151,6 +148,14 @@ export default function SummaryGeneration({ sessionId, patientId }: TextCase) {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
+         {notification.show && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="flex items-center bg-green-500 text-white text-sm font-bold px-4 py-3 rounded-md shadow-lg">
+            <CheckCircle className="h-5 w-5 mr-2" />
+            {notification.message}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -172,10 +177,6 @@ export default function SummaryGeneration({ sessionId, patientId }: TextCase) {
         </div>
               {/* Summary Section */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
-        </div>
-        
         {isEdit ? (
           <textarea
             className="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -367,9 +368,9 @@ export default function SummaryGeneration({ sessionId, patientId }: TextCase) {
       )}
 
       {/* Footer */}
-      <div className="text-center text-xs text-gray-400 mt-8">
+      {/* <div className="text-center text-xs text-gray-400 mt-8">
         10/07/2024 - 4:30 PM
-      </div>
+      </div> */}
     </div>
   )
 }
