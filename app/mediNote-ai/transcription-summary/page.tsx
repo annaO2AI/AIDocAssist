@@ -3,11 +3,12 @@ import HeaderAISearch from "@/app/chat-ui/components/Header"
 import Breadcrumbs from "@/app/components/dashboard/Breadcrumbs"
 import Sidebar from "@/app/components/dashboard/Sidebar"
 import { DashboardProvider } from "@/app/context/DashboardContext"
-import React, { useCallback, useEffect, useState } from "react"
+import React, { Suspense, useCallback, useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { APIService } from "../service/api"
 import { useSearchParams } from "next/navigation"
 import SummaryGenerator from "./Summary"
+import Loading from "./Loading"
 
 export default function TranscriptionSummaryPage() {
   const searchParams = useSearchParams()
@@ -149,10 +150,12 @@ export default function TranscriptionSummaryPage() {
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
           <main>
+             <Suspense fallback={<Loading />}>
             <SummaryGenerator 
               handleSaveAsDraft={handleSaveSummary} 
               handleApproveSummary={handleApproveSummary}
             />
+            </Suspense>
           </main>
         </div>
       </div>
