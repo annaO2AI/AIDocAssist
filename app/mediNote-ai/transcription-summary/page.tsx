@@ -11,13 +11,13 @@ import SummaryGenerator from "./Summary"
 import Loading from "./Loading"
 
 export default function TranscriptionSummaryPage() {
-  const searchParams = useSearchParams()
-  const sessionId = Number(searchParams.get("session_id")) || 0
+  const sessionId = 0;
+  // const searchParams = useSearchParams()
+  // const sessionId = Number(searchParams.get("session_id")) || 0
   const [collapsed, setCollapsed] = useState(true)
   const [hovered, setHovered] = useState(false)
 
   const patientId = 2;
-  console.log(sessionId, "sessionId", searchParams.get("session_id"))
   
   const toggleCollapse = () => {
     const newCollapsed = !collapsed
