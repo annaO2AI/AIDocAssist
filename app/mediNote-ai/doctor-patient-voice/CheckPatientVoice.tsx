@@ -17,29 +17,34 @@ export default function CheckPatientVoice({
   handleStartCon: (id: number) => void
 }) {
   const [users, setUsers] = useState<PatientCardProps | null>(null)
-  const [searchQuery, setSearchQuery] = useState<number>(1)
+  const [searchQuery, setSearchQuery] = useState<string>("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showPatientList, setShowPatientList] = useState(true) // New state to control ViewPatientList visibility
-  const [selectedPatientId, setSelectedPatientId] =
-    useState<number>(searchQuery)
+  const [showPatientList, setShowPatientList] = useState(true)
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null)
+  const [patientNotFound, setPatientNotFound] = useState(false)
 
   // Memoized fetchUsers function
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
+      setPatientNotFound(false)
       const data: PatientCardProps = await APIService.checkPatientVoiceExists(
-        searchQuery
+        parseInt(searchQuery)
       )
-      if (!data) {
-        setError("Something went wrong")
-        throw new Error("No response received from server")
+      if (!data || !data.exists) {
+        setPatientNotFound(true)
+        setUsers(null)
+        setSelectedPatientId(null)
       } else {
         setUsers(data)
-        setLoading(false)
-        setError(null)
-        setShowPatientList(true) // Ensure list is shown when new data is fetched
+        setPatientNotFound(false)
+        // Update selectedPatientId when new patient data is fetched
+        setSelectedPatientId(parseInt(searchQuery))
       }
+      setLoading(false)
+      setError(null)
+      setShowPatientList(true)
     } catch (err) {
       if (err instanceof Error) {
         setError(`Failed to fetch users: ${err.message}`)
@@ -47,6 +52,9 @@ export default function CheckPatientVoice({
         setError("Failed to fetch users")
       }
       setLoading(false)
+      setPatientNotFound(true)
+      setUsers(null)
+      setSelectedPatientId(null)
     }
   }, [searchQuery])
 
@@ -55,7 +63,13 @@ export default function CheckPatientVoice({
   // Debounce search input
   useEffect(() => {
     const timerId = setTimeout(() => {
-      searchQuery && fetchUsers()
+      if (searchQuery && searchQuery.trim() !== "" && !isNaN(parseInt(searchQuery))) {
+        fetchUsers()
+      } else {
+        setUsers(null)
+        setSelectedPatientId(null)
+        setPatientNotFound(false)
+      }
     }, 500)
 
     return () => {
@@ -65,8 +79,8 @@ export default function CheckPatientVoice({
 
   // Function to handle Start Session button click
   const handleStartSession = (patientId: number) => {
-    setShowPatientList(false) // Hide ViewPatientList
-    handleStartCon(patientId) // Call the original handleStartCon function
+    setShowPatientList(false)
+    handleStartCon(patientId)
   }
 
   return (
@@ -91,9 +105,11 @@ export default function CheckPatientVoice({
           <input
             type="text"
             className="block w-[540px] pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-[45px]"
-            placeholder="Search patients"
+            placeholder="Search patients by ID"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(Number(e.target.value))}
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+            }}
           />
         </div>
         <EnrollDoctorVoice />
@@ -102,6 +118,18 @@ export default function CheckPatientVoice({
       <div>
         <div className="flex ">
           <div className="w-3/5 ">
+            {loading && (
+              <div className="p-4 text-center text-gray-500">
+                Searching for patient...
+              </div>
+            )}
+            
+            {patientNotFound && !loading && (
+              <div className="p-4 text-center text-gray-500">
+                No patient found with ID: {searchQuery}
+              </div>
+            )}
+            
             {users && showPatientList && (
               <ViewPatientList
                 patient={users}
