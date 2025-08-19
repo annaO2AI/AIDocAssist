@@ -73,13 +73,21 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
       <div className="visits-section">
         <h4 className="font-medium text-gray-700">Previous Visits</h4>
         {patientData.previous_visit_summaries.length > 0 ? (
-          <ul className="mt-2 space-y-2">
-            {patientData.previous_visit_summaries.map((visit, index) => (
-              <li key={index} className="p-3 border rounded bg-gray-50">
-                Visit #{index + 1}: {visit.summary || "No details available"}
-              </li>
-            ))}
-          </ul>
+          <div className="mt-2 max-h-60 overflow-y-auto">
+            <ul className="space-y-2 pr-2">
+              {patientData.previous_visit_summaries.map((visit, index) => (
+                <li key={index} className="p-3 border rounded bg-gray-50">
+                  <div className="font-medium">Visit #{index + 1}</div>
+                  <div className="mt-1">{visit.summary || "No details available"}</div>
+                  {visit.date && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      Date: {new Date(visit.date).toLocaleDateString()}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : (
           <div className="mt-2 p-3 bg-gray-50 rounded">No previous visits recorded</div>
         )}
