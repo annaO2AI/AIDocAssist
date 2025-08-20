@@ -101,8 +101,8 @@ static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
         'accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(patientData),
       credentials: 'include',
+      body: JSON.stringify(patientData),
     });
 
     if (!response.ok) {

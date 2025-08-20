@@ -49,7 +49,7 @@ const ViewPatientList = ({
           </div>
         </div>
       </div>
-      <div className="px-6 pb-4">
+      {/* <div className="px-6 pb-4">
         <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
           <span className="text-sm text-gray-600">Voice recording</span>
           <button
@@ -71,7 +71,7 @@ const ViewPatientList = ({
             </svg>
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

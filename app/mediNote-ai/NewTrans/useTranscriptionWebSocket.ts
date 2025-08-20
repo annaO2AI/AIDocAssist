@@ -2,353 +2,295 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface TranscriptionMessage {
-  type: 'Doctor' | 'Patient' | 'error';
-  text?: string;
+  type: 'turn-final' | 'turn-update' | 'status' | 'error';
   speaker?: string;
-  ts?: number;
-  session_id?: number;
-  raw?: string;
+  text?: string;
+  t0?: number;
+  t1?: number;
+  turn_id?: number;
+  state?: string;
+  msg?: string;
 }
 
 interface UseTranscriptionWebSocketProps {
   sessionId: number;
+  doctorId: number;
+  patientId: number;
   baseUrl?: string;
   autoConnect?: boolean;
 }
 
 export const useTranscriptionWebSocket = ({
   sessionId,
-  baseUrl = `wss://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net`,
+  doctorId,
+  patientId,
+  baseUrl = `https://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net`,
   autoConnect = true
 }: UseTranscriptionWebSocketProps) => {
   const wsRef = useRef<WebSocket | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  
-  // Add refs for collecting audio data
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recordingStartTimeRef = useRef<number>(0);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState<TranscriptionMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [recordedAudioBlob, setRecordedAudioBlob] = useState<Blob | null>(null);
+  const [status, setStatus] = useState<string>('Disconnected');
 
-  // Convert HTTP URL to WebSocket URL
   const getWebSocketUrl = useCallback((url: string) => {
-    return url.replace(/^https?/, 'ws');
+    return url.replace(/^https/, 'wss');
   }, []);
 
-  // Connect WebSocket
-  const connect = useCallback(() => {
+  const workletCode = `
+  class PCM16Capture extends AudioWorkletProcessor {
+    constructor() {
+      super();
+      this.inRate = sampleRate;
+      this.frameIn = Math.round(this.inRate / 50);
+      this.buf = new Float32Array(0);
+    }
+    
+    static get parameterDescriptors() { return []; }
+    
+    process(inputs) {
+      const input = inputs[0];
+      if (!input || input.length === 0) return true;
+      const ch = input[0];
+      if (!ch) return true;
+      
+      const merged = new Float32Array(this.buf.length + ch.length);
+      merged.set(this.buf, 0);
+      merged.set(ch, this.buf.length);
+      this.buf = merged;
+      
+      while (this.buf.length >= this.frameIn) {
+        const inBlock = this.buf.subarray(0, this.frameIn);
+        this.buf = this.buf.subarray(this.frameIn);
+        const outLen = 320;
+        const factor = this.frameIn / outLen;
+        const out = new Int16Array(outLen);
+        
+        for (let i = 0; i < outLen; i++) {
+          const start = Math.floor(i * factor);
+          const end = Math.min(this.frameIn, Math.floor((i + 1) * factor));
+          let sum = 0;
+          
+          for (let j = start; j < end; j++) {
+            sum += inBlock[j];
+          }
+          
+          const avg = sum / Math.max(1, end - start);
+          const clamped = Math.max(-1, Math.min(1, avg));
+          out[i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
+        }
+        
+        this.port.postMessage(out.buffer, [out.buffer]);
+      }
+      
+      return true;
+    }
+  }
+  
+  registerProcessor('pcm16-capture', PCM16Capture);
+  `;
+
+  const connect = useCallback(async () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       console.log('WebSocket already connected');
       return;
     }
 
     try {
-      const wsUrl = `${getWebSocketUrl(baseUrl)}/ws/transcribe/${sessionId}/1/1`;
-      console.log('Connecting to:', wsUrl);
+      const wsUrl = `wss://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net/ws/transcribe/19/1/1`;
+      console.log('Connecting to WebSocket:', wsUrl);
       
       wsRef.current = new WebSocket(wsUrl);
+      wsRef.current.binaryType = 'arraybuffer';
 
       wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
         setIsConnected(true);
+        setStatus('Connected');
         setError(null);
       };
 
       wsRef.current.onmessage = (event) => {
-        const rawData = event.data.toString().trim();
-        
-        // Check if it's JSON
-        if (rawData.startsWith('{') || rawData.startsWith('[')) {
-          try {
-            const message: TranscriptionMessage = JSON.parse(rawData);
-            console.log('📨 JSON message:', message);
+        try {
+          if (typeof event.data === 'string') {
+            const message: TranscriptionMessage = JSON.parse(event.data);
+            console.log('Received message:', message);
             
-            setTranscription(prev => [...prev, message]);
-            
-            return;
-          } catch (err) {
-            console.warn('⚠️ Failed to parse JSON:', rawData);
+            switch (message.type) {
+              case 'turn-final':
+                setTranscription(prev => [...prev, message]);
+                break;
+              case 'status':
+                setStatus(message.msg || message.state || 'Unknown status');
+                break;
+              case 'error':
+                setError(message.msg || 'Unknown error');
+                break;
+              default:
+                console.log('Unknown message type:', message.type);
+            }
           }
-        }
-        
-        // Handle plain text messages
-        console.log('📝 Plain text message:', rawData);
-        
-        if (!rawData || rawData.length === 0) {
-          return; // Ignore empty messages
-        }
-        
-        // Categorize the message type
-        let messageType: TranscriptionMessage['type'] = 'Doctor';
-        
-        if (rawData.includes('buffering') || 
-            rawData.includes('processing') || 
-            rawData.includes('connecting') ||
-            rawData.includes('initializing') ||
-            rawData.includes('loading') ||
-            rawData.startsWith('...')) {
-          messageType = 'Patient';
-        } else if (rawData.includes('error') || rawData.includes('failed')) {
-          messageType = 'error';
-          setError(rawData);
-        }
-        
-        // Create structured message from plain text
-        const textMessage: TranscriptionMessage = {
-          type: messageType,
-          text: rawData,
-          ts: Date.now(),
-          raw: rawData // Store original for debugging
-        };
-        
-        // For status messages, replace the previous status instead of accumulating
-        if (messageType === 'Patient') {
-          setTranscription(prev => {
-            const withoutPreviousStatus = prev.filter(msg => msg.type !== 'Patient');
-            return [...withoutPreviousStatus, textMessage];
-          });
-        } else {
-          setTranscription(prev => [...prev, textMessage]);
+        } catch (err) {
+          console.warn('Failed to parse message:', event.data, err);
         }
       };
 
       wsRef.current.onclose = (event) => {
         console.log('WebSocket closed:', event.code, event.reason);
         setIsConnected(false);
+        setStatus('Disconnected');
         
-        // Auto-reconnect logic (optional)
-        if (event.code !== 1000) { // Not a normal closure
-          setTimeout(() => {
-            if (autoConnect) {
-              console.log('Attempting to reconnect...');
-              connect();
-            }
-          }, 3000);
+        if (event.code !== 1000) {
+          setError(`Connection closed: ${event.reason || 'Unknown reason'}`);
         }
       };
 
       wsRef.current.onerror = (error) => {
         setError('WebSocket connection error');
+        setStatus('Error');
       };
 
     } catch (err) {
       console.error('Failed to create WebSocket:', err);
       setError('Failed to create WebSocket connection');
     }
-  }, [sessionId, baseUrl, autoConnect, getWebSocketUrl]);
+  }, [sessionId, doctorId, patientId, baseUrl, getWebSocketUrl]);
 
-  // Disconnect WebSocket
   const disconnect = useCallback(() => {
+    stopRecording();
+    
     if (wsRef.current) {
       wsRef.current.close(1000, 'User disconnected');
       wsRef.current = null;
     }
+    
     setIsConnected(false);
+    setStatus('Disconnected');
   }, []);
 
-  // Send audio data
-  const sendAudioChunk = useCallback((audioData: ArrayBuffer) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(audioData);
-    } else {
-      console.warn('WebSocket not connected, cannot send audio data');
-    }
-  }, []);
-
-  // Send control messages
-  const sendMessage = useCallback((message: object) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
-    } else {
-      console.warn('WebSocket not connected, cannot send message');
-    }
-  }, []);
-
-  // Start recording
-  const startRecording = useCallback(async () => {
+  const initAudio = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
+        latencyHint: 'interactive',
+        sampleRate: 48000
+      });
+
+      await audioContextRef.current.resume();
+
+      const blob = new Blob([workletCode], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      await audioContextRef.current.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+
+      mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000
         }
       });
 
-      streamRef.current = stream;
+      const source = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
+      workletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'pcm16-capture');
+
+      source.connect(workletNodeRef.current);
       
-      // Clear previous audio chunks and reset blob
-      audioChunksRef.current = [];
-      setRecordedAudioBlob(null);
-      recordingStartTimeRef.current = Date.now();
+      const silentGain = audioContextRef.current.createGain();
+      silentGain.gain.value = 0;
+      workletNodeRef.current.connect(silentGain);
+      silentGain.connect(audioContextRef.current.destination);
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=pcm'
-      });
-
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          // Store chunk for complete audio file
-          audioChunksRef.current.push(event.data);
-          
-          // Still send to WebSocket for real-time transcription
-          if (wsRef.current?.readyState === WebSocket.OPEN) {
-            event.data.arrayBuffer().then((buffer) => {
-              sendAudioChunk(buffer);
-            });
-          }
+      workletNodeRef.current.port.onmessage = (event) => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(event.data);
         }
       };
 
-      // Handle recording completion
-      mediaRecorder.onstop = () => {
-        console.log('MediaRecorder stopped, creating audio blob');
-        
-        if (audioChunksRef.current.length > 0) {
-          const audioBlob = new Blob(audioChunksRef.current, { 
-            type: 'audio/webm' 
-          });
-          
-          setRecordedAudioBlob(audioBlob);
-          
-          const duration = Date.now() - recordingStartTimeRef.current;
-          console.log(`Recording completed: ${audioBlob.size} bytes, ${duration}ms duration`);
-        }
-      };
-
-      mediaRecorder.start(100); // Send data every 100ms
-      setIsRecording(true);
-      console.log('Recording started');
-
+      return true;
     } catch (err) {
-      console.error('Failed to start recording:', err);
-      setError('Failed to access microphone');
+      setError('Failed to initialize audio processing');
+      return false;
     }
-  }, [sendAudioChunk]);
-
-  // Stop recording
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-
-    setIsRecording(false);
-    console.log('Recording stopped');
   }, []);
 
-  // Download recorded audio
-  const downloadAudioFile = useCallback((filename?: string) => {
-    if (!recordedAudioBlob) {
-      console.warn('No recorded audio available for download');
+  const startRecording = useCallback(async () => {
+    if (isRecording) {
+      console.log('Already recording');
       return;
     }
 
-    const url = URL.createObjectURL(recordedAudioBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename || `recording-session-${sessionId}-${Date.now()}.webm`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [recordedAudioBlob, sessionId]);
-
-  // Get audio file as File object
-  const getAudioFile = useCallback((filename?: string): File | null => {
-    if (!recordedAudioBlob) {
-      return null;
+    if (!isConnected) {
+      await connect();
     }
 
-    return new File(
-      [recordedAudioBlob], 
-      filename || `recording-session-${sessionId}-${Date.now()}.webm`, 
-      { type: 'audio/webm' }
-    );
-  }, [recordedAudioBlob, sessionId]);
+    const audioInitialized = await initAudio();
+    if (audioInitialized) {
+      setIsRecording(true);
+      setStatus('Recording');
+      console.log('Recording started');
+    }
+  }, [isRecording, isConnected, connect, initAudio]);
 
-  // Get audio file as WAV format
-  const getWavAudioFile = useCallback(async (filename?: string): Promise<File | null> => {
-    if (!recordedAudioBlob) {
-      return null;
+  const stopRecording = useCallback(() => {
+    if (workletNodeRef.current) {
+      workletNodeRef.current.disconnect();
+      workletNodeRef.current = null;
     }
 
-    try {
-      // Import AudioConverter dynamically to avoid issues if not available
-      const { AudioConverter } = await import('./audioConverter');
-      const wavBlob = await AudioConverter.convertToWav(recordedAudioBlob, 16000);
-      
-      return new File(
-        [wavBlob], 
-        filename || `recording-session-${sessionId}-${Date.now()}.wav`, 
-        { type: 'audio/wav' }
-      );
-    } catch (error) {
-      console.error('Failed to convert audio to WAV:', error);
-      return null;
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
     }
-  }, [recordedAudioBlob, sessionId]);
 
-  // Clear transcription and audio
-  const clearTranscription = useCallback(() => {
-    setTranscription([]);
-    setRecordedAudioBlob(null);
-    audioChunksRef.current = [];
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+
+    setIsRecording(false);
+    setStatus('Connected (not recording)');
+    console.log('Recording stopped');
   }, []);
 
-  // Auto-connect on mount
+  const sendControlMessage = useCallback((type: string, data?: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type, ...data }));
+    }
+  }, []);
+
+  const clearTranscription = useCallback(() => {
+    setTranscription([]);
+  }, []);
+
   useEffect(() => {
     if (autoConnect && sessionId) {
       connect();
     }
 
     return () => {
-      stopRecording();
       disconnect();
     };
-  }, [sessionId, autoConnect]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sessionId, autoConnect, connect, disconnect]);
 
   return {
-    // Connection state
     isConnected,
     isRecording,
     transcription,
     error,
-    
-    // Audio state
-    recordedAudioBlob,
-    hasRecordedAudio: !!recordedAudioBlob,
-    
-    // Connection methods
+    status,
     connect,
     disconnect,
-    
-    // Recording methods
     startRecording,
     stopRecording,
-    
-    // Audio file methods
-    downloadAudioFile,
-    getAudioFile,
-    getWavAudioFile,
-    
-    // Communication methods
-    sendAudioChunk,
-    sendMessage,
-    
-    // Utility methods
+    sendControlMessage,
     clearTranscription,
+    hasTranscription: transcription.length > 0
   };
 };

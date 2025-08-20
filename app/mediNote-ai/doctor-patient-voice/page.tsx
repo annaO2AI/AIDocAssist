@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation"
 import Sidebar from "../../components/dashboard/Sidebar"
 import { DashboardProvider } from "../../context/DashboardContext"
 import HeaderAISearch from "../../chat-ui/components/Header"
-import Breadcrumbs from "../../components/dashboard/Breadcrumbs" // Import Breadcrumbs component
+import Breadcrumbs from "../../components/dashboard/Breadcrumbs"
 
 import CheckPatientVoice from "./CheckPatientVoice"
 import { APIService } from "../service/api"
-import TranscriptionComponent, {
-  TranscriptionData,
-} from "../NewTrans/TranscriptionComponent"
+import TranscriptionComponent from "../NewTrans/TranscriptionComponent"
 import SummaryGeneration from "../NewTrans/SummaryGeneration"
+
+// Define types for our state
+type AppState = "patientCheck" | "transcription" | "summary"
 
 export default function ProcurementSearchPage() {
   const pathname = usePathname()
@@ -20,8 +21,8 @@ export default function ProcurementSearchPage() {
   const [hovered, setHovered] = useState(false)
   const [sessionId, setSessionId] = useState<number>()
   const [patientId, setPatientId] = useState<number>()
-  const [transcriptionData, setTranscriptionData] =
-    useState<TranscriptionData | null>(null)
+  const [currentState, setCurrentState] = useState<AppState>("patientCheck")
+  const [transcriptionComplete, setTranscriptionComplete] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebar-collapsed")
@@ -46,10 +47,16 @@ export default function ProcurementSearchPage() {
       if (data) {
         setSessionId(data?.session_id)
         setPatientId(patientId)
+        setCurrentState("transcription")
       }
     } catch (error) {
       console.log("Failed to start recording:", error)
     }
+  }
+
+  const handleTranscriptionComplete = () => {
+    setTranscriptionComplete(true)
+    setCurrentState("summary")
   }
 
   return (
@@ -71,17 +78,18 @@ export default function ProcurementSearchPage() {
         >
           <main>
             <div className="enrollDoctorVoice">
-              {!transcriptionData && !sessionId && 
-              <CheckPatientVoice handleStartCon={startRecording} />
+              {currentState === "patientCheck" && 
+                <CheckPatientVoice handleStartCon={startRecording} />
               }
-              {!transcriptionData && sessionId && patientId && (
+              
+              {currentState === "transcription" && sessionId && patientId && (
                 <TranscriptionComponent
                   sessionId={sessionId}
                   patientId={patientId}
-                  setTranscriptionData={setTranscriptionData}
                 />
               )}
-              {transcriptionData&& sessionId && patientId  && (
+              
+              {currentState === "summary" && sessionId && patientId && (
                 <SummaryGeneration
                   sessionId={sessionId}
                   patientId={patientId}

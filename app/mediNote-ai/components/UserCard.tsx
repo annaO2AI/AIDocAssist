@@ -61,8 +61,8 @@ const UserCard: React.FC<UserCardProps> = ({ user, onUpdate, onEnrollVoice }) =>
       <div className="space-y-2 text-sm">
         <p><span className="font-medium">Email:</span> {user.email}</p>
         <p><span className="font-medium">Phone:</span> {user.phone}</p>
-        <p><span className="font-medium">SSN Last 4:</span> {user.ssn_last4}</p>
-        <p><span className="font-medium">Address:</span> {user.address}</p>
+        {/* <p><span className="font-medium">SSN Last 4:</span> {user.ssn_last4}</p> */}
+        {/* <p><span className="font-medium">Address:</span> {user.address}</p> */}
          <p><span className="font-medium">Patient ID:</span> {user.id}</p>
         <p>
           <span className="font-medium">Voice Status:</span> 
