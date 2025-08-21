@@ -24,7 +24,7 @@ const menuItems = [
       { label: "Patient Registration", href: "/mediNote-ai/patient-registration", icon: ArroTabIcon },
       { label: "Patient Details", href: "/mediNote-ai/patient-details", icon: ArroTabIcon },
       { label: "Doctor & Patient Voice", href: "/mediNote-ai/doctor-patient-voice", icon: ArroTabIcon },
-      { label: "AI Summary", href: "/mediNote-ai/transcription-summary", icon: ArroTabIcon },
+      // { label: "AI Summary", href: "/mediNote-ai/transcription-summary", icon: ArroTabIcon },
 
     ],
   },
