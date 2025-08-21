@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react"
+"use client"
+import React, { useState, useRef, useEffect } from "react";
 import {
   Play,
   Pause,
@@ -6,55 +7,200 @@ import {
   Calendar,
   User,
   Stethoscope,
-  Clock,
   FileText,
-} from "lucide-react"
+} from "lucide-react";
+import {  TranscriptionSummary } from "../types"
 
-const SummaryGenerator = ({
+
+interface Chip {
+  label: string;
+  value: string;
+}
+
+interface Insights {
+  title: string;
+  by: string;
+  bullets: string[];
+}
+
+interface Followup {
+  title: string;
+  note: string;
+  date: string | null;
+}
+
+interface UI {
+  chips: Chip[];
+  insights: {
+    doctor: Insights;
+    patient: Insights;
+  };
+  followup: Followup;
+}
+
+export interface Summary {
+  summary_id: number;
+  title: string;
+  status: string;
+  content: string;
+  created_at: string;
+  approved_at: string | null;
+  file_path: string;
+  ui: UI;
+}
+
+ interface SummaryData {
+  success: boolean;
+  session_id: number;
+  summary_id: number;
+  status: string;
+  title: string;
+  content: string;
+  created_at: string;
+  approved_at: string | null;
+  file_path: string;
+  summary: Summary;
+}
+
+interface SummaryGeneratorProps {
+  handleSaveAsDraft: () => void;
+  handleApproveSummary: () => void;
+  summaryData: Summary;
+    // sessionId: number
+    // patientId: number
+    // transcriptionEnd: TranscriptionSummary
+}
+
+// Sample JSON data (would typically come from an API)
+export const sampleData: SummaryData = {
+  success: true,
+  session_id: 53,
+  summary_id: 8,
+  status: "draft",
+  title: "Visit Summary",
+  content: "**Next Steps:** ct, follow-up, lab\n\n## Summary\nThe combined summary reflects a clinical discussion where the doctor reviewed the patient's symptoms discussed occurring recently. Relevant history and medications were reviewed. ct, follow-up, lab.\n\n### Doctor Call Insights\n- —\n\n### Patient Call Insights\n- 成\n\n\n### Follow-up Appointment\n\nTo be scheduled after results.",
+  created_at: "2025-08-21T14:22:30",
+  approved_at: null,
+  file_path: "data/summaries/session_53_summary.txt",
+  summary: {
+    summary_id: 8,
+    title: "Visit Summary",
+    status: "draft",
+    content: "**Next Steps:** ct, follow-up, lab\n\n## Summary\nThe combined summary reflects a clinical discussion where the doctor reviewed the patient's symptoms discussed occurring recently. Relevant history and medications were reviewed. ct, follow-up, lab.\n\n### Doctor Call Insights\n- —\n\n### Patient Call Insights\n- 成\n\n\n### Follow-up Appointment\n\nTo be scheduled after results.",
+    created_at: "2025-08-21T14:22:30",
+    approved_at: null,
+    file_path: "data/summaries/session_53_summary.txt",
+    ui: {
+      chips: [
+        {
+          label: "Patient",
+          value: "Patient #1"
+        },
+        {
+          label: "Symptoms",
+          value: ""
+        },
+        {
+          label: "Duration",
+          value: ""
+        },
+        {
+          label: "Family History",
+          value: ""
+        },
+        {
+          label: "Next Steps",
+          value: "** ct, follow-up, lab"
+        }
+      ],
+      insights: {
+        doctor: {
+          title: "Doctor Call Insights",
+          by: "Dr. 0",
+          bullets: [
+            "**Next Steps:** ct, follow-up, lab  ## Summary The combined summary reflects a clinical discussion where the doctor reviewed the patient's symptoms discussed occurring recently.",
+            "Relevant history and medications were reviewed.",
+            "### Doctor Call Insights - —  ### Patient Call Insights - 成   ### Follow-up Appointment  To be scheduled after results."
+          ]
+        },
+        patient: {
+          title: "Patient Call Insights",
+          by: "Patient #1",
+          bullets: []
+        }
+      },
+      followup: {
+        title: "Follow-up Appointment",
+        note: "** ct, follow-up, lab",
+        date: null
+      }
+    }
+  }
+};
+
+const SummaryGenerator: React.FC<SummaryGeneratorProps> = ({
+  //  sessionId, patientId, transcriptionEnd,
   handleSaveAsDraft,
-  handleApproveSummary
-}: {
-  handleSaveAsDraft: any
-  handleApproveSummary: any
+  handleApproveSummary,
+  summaryData
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(184) // 3:04 in seconds
-  const audioRef = useRef(null)
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(184);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const formatTime = (seconds: any) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying)
-  }
+  const togglePlayPause = (): void => {
+    setIsPlaying(!isPlaying);
+  };
 
-  const handleProgressClick = (e: any) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const clickX = e.clientX - rect.left
-    const width = rect.width
-    const newTime = Math.floor((clickX / width) * duration)
-    setCurrentTime(newTime)
-  }
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const width = rect.width;
+    const newTime = Math.floor((clickX / width) * duration);
+    setCurrentTime(newTime);
+  };
 
+  
   useEffect(() => {
-    let interval: NodeJS.Timeout
+    let interval: NodeJS.Timeout;
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentTime((prev) => {
           if (prev >= duration) {
-            setIsPlaying(false)
-            return duration
+            setIsPlaying(false);
+            return duration;
           }
-          return prev + 1
-        })
-      }, 1000)
+          return prev + 1;
+        });
+      }, 1000);
     }
-    return () => clearInterval(interval)
-  }, [isPlaying, duration])
+    return () => clearInterval(interval);
+  }, [isPlaying, duration]);
+
+  // Extract data from JSON
+  const patientName = summaryData.ui.chips[0].value;
+  const symptoms = summaryData.ui.chips[1].value;
+  const durationText = summaryData.ui.chips[2].value;
+  const familyHistory = summaryData.ui.chips[3].value;
+  const nextSteps = summaryData.ui.chips[4].value.replace("** ", "");
+  
+  const doctorName = summaryData.ui.insights.doctor.by;
+  const doctorInsights = summaryData.ui.insights.doctor.bullets;
+  
+  const patientInsights = summaryData.ui.insights.patient.bullets;
+  
+  const followupNote = summaryData.ui.followup.note.replace("** ", "");
+  const followupDate = summaryData.ui.followup.date;
+  
+  const createdDate = new Date(summaryData.created_at).toLocaleDateString();
+  const createdTime = new Date(summaryData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
@@ -66,7 +212,7 @@ const SummaryGenerator = ({
               <FileText className="w-4 h-4 text-blue-600" />
             </div>
             <h1 className="text-xl font-semibold text-gray-900">
-              Patient-Davis.mp3
+              Patient-{patientName.replace("#", "")}.mp3
             </h1>
           </div>
           <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
@@ -111,27 +257,27 @@ const SummaryGenerator = ({
         <div className="mt-6 space-y-2 text-sm">
           <div>
             <span className="font-medium text-gray-700">Patient:</span>{" "}
-            <span className="text-gray-600">Mr. Davis</span>
+            <span className="text-gray-600">{patientName}</span>
           </div>
           <div>
             <span className="font-medium text-gray-700">Symptoms:</span>{" "}
             <span className="text-gray-600">
-              Chest tightness during exertion, mild shortness of breath
+              {symptoms || "Not specified"}
             </span>
           </div>
           <div>
             <span className="font-medium text-gray-700">Duration:</span>{" "}
-            <span className="text-gray-600">Past few days</span>
+            <span className="text-gray-600">{durationText || "Not specified"}</span>
           </div>
           <div>
             <span className="font-medium text-gray-700">Family History:</span>{" "}
             <span className="text-gray-600">
-              Father had a heart attack in his 50s
+              {familyHistory || "Not specified"}
             </span>
           </div>
           <div>
             <span className="font-medium text-gray-700">Next Steps:</span>{" "}
-            <span className="text-gray-600">ECC and blood tests scheduled</span>
+            <span className="text-gray-600">{nextSteps}</span>
           </div>
         </div>
       </div>
@@ -140,21 +286,8 @@ const SummaryGenerator = ({
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Summary</h2>
         <p className="text-gray-700 text-sm leading-relaxed">
-          The combined summary for Dr. Rachel and Mr. Davis reveals a medical
-          consultation where the doctor noted the patient&apos;s chest discomfort
-          over the past few days and conducted a detailed inquiry into the panic
-          nature. This issue resolved in establishing a comprehensive
-          understanding of the patient&apos;s current health status. Mr. Davis, a
-          48-year-old with a history of hypertension and Type 2 Diabetes,
-          reported this as his first noticeable episode and confirmed a family
-          history of heart attack, prompting Dr. Rachel to schedule an ECG and
-          blood tests to investigate potential angina. The doctor plans to
-          review the results and determine the next steps, while the patient&apos;s
-          ongoing medications, Amlodipine for hypertension and Metformin for
-          diabetes, were noted with specific dosages and start dates. This
-          proactive approach aims to address the symptoms and underlying risks,
-          with a follow-up appointment tentatively set for early August 2025
-          pending lab outcomes.
+          {summaryData.content.split("## Summary")[1]?.split("### Doctor Call Insights")[0] || 
+           "Summary content not available."}
         </p>
       </div>
 
@@ -172,15 +305,16 @@ const SummaryGenerator = ({
                   Doctor Call Insights
                 </h3>
               </div>
-              <p className="text-sm text-gray-600 mb-3">Dr. Rachel</p>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Noted patient&apos;s chest discomfort over the past few days.
-                Inquired about pain description (sharp, dull, ache) and
-                shortness of breath. Asked about prior occurrence and family
-                history of heart conditions. Scheduled ECC and blood tests based
-                on symptoms and family history. Planned to review results and
-                proceed.
-              </p>
+              <p className="text-sm text-gray-600 mb-3">{doctorName}</p>
+              <ul className="text-sm text-gray-700 leading-relaxed list-disc pl-5 space-y-1">
+                {doctorInsights?.length > 0 ? (
+                  doctorInsights?.map((insight, index) => (
+                    <li key={index}>{insight}</li>
+                  ))
+                ) : (
+                  <li>No doctor insights available</li>
+                )}
+              </ul>
             </div>
           </div>
         </div>
@@ -197,15 +331,16 @@ const SummaryGenerator = ({
                   Patient Call Insights
                 </h3>
               </div>
-              <p className="text-sm text-gray-600 mb-3">Mr. Davis</p>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Reported chest discomfort for the past few days, described as
-                tight sensation when climbing stairs or during fast movements.
-                Acknowledged having hypertension and diabetes. Experienced
-                slight shortness of breath, which improves with rest. First
-                noticeable occurrence of this intensity. Confirmed family
-                history of heart attack (father in early 50s).
-              </p>
+              <p className="text-sm text-gray-600 mb-3">{patientName}</p>
+              <ul className="text-sm text-gray-700 leading-relaxed list-disc pl-5 space-y-1">
+                {patientInsights?.length > 0 ? (
+                  patientInsights?.map((insight, index) => (
+                    <li key={index}>{insight}</li>
+                  ))
+                ) : (
+                  <li>No patient insights available</li>
+                )}
+              </ul>
             </div>
           </div>
         </div>
@@ -222,8 +357,11 @@ const SummaryGenerator = ({
               Follow-up Appointment
             </h3>
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Date:</span> To be determined after
-              lab results (estimated around 01/08/2025)
+              <span className="font-medium">Note:</span> {followupNote}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Date:</span>{" "}
+              {followupDate || "To be scheduled after results"}
             </p>
           </div>
         </div>
@@ -238,8 +376,9 @@ const SummaryGenerator = ({
           Save Draft
         </button>
         <button 
-        onClick={handleApproveSummary}
-        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+          onClick={handleApproveSummary}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+        >
           <span>Submit</span>
           <svg
             className="w-4 h-4"
@@ -259,10 +398,34 @@ const SummaryGenerator = ({
 
       {/* Footer */}
       <div className="text-center text-xs text-gray-400 mt-8">
-        10/07/2024 - 4:30 PM
+        {createdDate} - {createdTime}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SummaryGenerator
+// Demo component to show the implementation
+const SummaryGeneratorDemo: React.FC = () => {
+  const handleSaveAsDraft = (): void => {
+    alert("Save as draft clicked!");
+  };
+
+  const handleApproveSummary = (): void => {
+    alert("Approve summary clicked!");
+  };
+
+  return (
+    <div className=" bg-gray-100 min-h-screen">
+      <div className="pt-4">
+
+      <SummaryGenerator
+          handleSaveAsDraft={handleSaveAsDraft}
+          handleApproveSummary={handleApproveSummary}
+          summaryData={sampleData.summary} 
+           />
+      </div>
+    </div>
+  );
+};
+
+export default SummaryGeneratorDemo;

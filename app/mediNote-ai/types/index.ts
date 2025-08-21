@@ -180,4 +180,12 @@ export interface SummaryData {
   created_at: string;  // ISO 8601 date string
   approved_at: string | null;
   file_path: string | null;
+   summary: Summary;
+}
+
+export interface TranscriptionSummary {
+  message: string;
+  session_id: number;
+  summary_status: string;
+  summary_id: number;
 }

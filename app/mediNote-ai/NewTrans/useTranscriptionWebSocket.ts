@@ -102,7 +102,7 @@ export const useTranscriptionWebSocket = ({
     }
 
     try {
-      const wsUrl = `wss://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net/ws/transcribe/19/1/1`;
+      const wsUrl = `wss://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net/ws/transcribe/${sessionId}/${doctorId}/${patientId}`;
       console.log('Connecting to WebSocket:', wsUrl);
       
       wsRef.current = new WebSocket(wsUrl);

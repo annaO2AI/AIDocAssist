@@ -307,9 +307,32 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
       throw error;
     }
   }
-  static async getSummaryById(summaryId: number): Promise<any> {
+
+  static async getSummary(sessionId: number): Promise<any> {
     try {
-      const response = await fetch(`${API_SERVICE}/summary/summary/summary/get/${summaryId}`, {
+      const response = await fetch(`${API_SERVICE}/summary/summary/summary/getf/${sessionId}`, {
+        method: "GET",
+        headers: {
+          'accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Get summary failed: ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Get summary error:', error);
+      throw error;
+    }
+  }
+  static async getSummaryById(sessionId: number): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/summary/summary/summary/get/${sessionId}`, {
         method: "GET",
         headers: {
           'accept': 'application/json',
@@ -355,32 +378,33 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-  static async editSummary(data:{summaryId: number, edited_text: string}): Promise<any> {
-    try {
-      const url = `${API_SERVICE}/summary/summary/summary/edit/${data?.summaryId}`
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          'accept': 'application/json',
-        },
-        body:JSON.stringify({
-          summary_text:data.edited_text
-        }),
-        credentials: 'include',
-      });
+static async editSummary(data: {summaryId: number, edited_text: string}): Promise<any> {
+  try {
+    const url = `${API_SERVICE}/summary/summary/summary/edit/${data.summaryId}`;
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        summary_text: data.edited_text || ''
+      }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.log(errorData);
-        throw new Error(`Edit summary failed: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Edit summary error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      console.log(errorData);
+      throw new Error(`Edit summary failed: ${response.status}`);
     }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Edit summary error:', error);
+    throw error;
   }
+}
     static async generateSummary(full_text: string): Promise<any> {
     try {
       const response = await fetch(`${API_SERVICE}/summary/generate`, {
@@ -471,7 +495,6 @@ static async getPatientHistory(patientId: number): Promise<any> {
       throw error;
     }
   }
-
 }
 
 

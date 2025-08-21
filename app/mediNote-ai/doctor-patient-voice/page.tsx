@@ -11,6 +11,8 @@ import CheckPatientVoice from "./CheckPatientVoice"
 import { APIService } from "../service/api"
 import TranscriptionComponent from "../NewTrans/TranscriptionComponent"
 import SummaryGeneration from "../NewTrans/SummaryGeneration"
+import { TranscriptionSummary } from "../types"
+import { sampleData } from "../transcription-summary/Summary"
 
 // Define types for our state
 type AppState = "patientCheck" | "transcription" | "summary"
@@ -22,7 +24,7 @@ export default function ProcurementSearchPage() {
   const [sessionId, setSessionId] = useState<number>()
   const [patientId, setPatientId] = useState<number>()
   const [currentState, setCurrentState] = useState<AppState>("patientCheck")
-  const [transcriptionComplete, setTranscriptionComplete] = useState(false)
+  const [transcriptionEnd, setTranscriptionEnd] = useState<TranscriptionSummary | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebar-collapsed")
@@ -54,10 +56,6 @@ export default function ProcurementSearchPage() {
     }
   }
 
-  const handleTranscriptionComplete = () => {
-    setTranscriptionComplete(true)
-    setCurrentState("summary")
-  }
 
   return (
     <DashboardProvider>
@@ -82,17 +80,19 @@ export default function ProcurementSearchPage() {
                 <CheckPatientVoice handleStartCon={startRecording} />
               }
               
-              {currentState === "transcription" && sessionId && patientId && (
+              {currentState === "transcription" && sessionId && patientId && !transcriptionEnd && (
                 <TranscriptionComponent
                   sessionId={sessionId}
                   patientId={patientId}
+                  setTranscriptionEnd={setTranscriptionEnd}
                 />
               )}
-              
-              {currentState === "summary" && sessionId && patientId && (
+              {sessionId && patientId && transcriptionEnd && (
                 <SummaryGeneration
                   sessionId={sessionId}
                   patientId={patientId}
+                  transcriptionEnd={transcriptionEnd}
+                  summaryData={sampleData}
                 />
               )}
             </div>

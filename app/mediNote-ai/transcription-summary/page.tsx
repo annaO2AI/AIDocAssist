@@ -11,26 +11,26 @@ import SummaryGenerator from "./Summary"
 import Loading from "./Loading"
 
 export default function TranscriptionSummaryPage() {
-  const sessionId = 0;
+  const sessionId = 0
   // const searchParams = useSearchParams()
   // const sessionId = Number(searchParams.get("session_id")) || 0
   const [collapsed, setCollapsed] = useState(true)
   const [hovered, setHovered] = useState(false)
 
-  const patientId = 2;
-  
+  const patientId = 2
+
   const toggleCollapse = () => {
     const newCollapsed = !collapsed
     localStorage.setItem("sidebar-collapsed", String(newCollapsed))
     setCollapsed(newCollapsed)
   }
-  
+
   const isSidebarExpanded = !collapsed || hovered
   const sidebarWidth = isSidebarExpanded ? 256 : 64
   const showSidebar = true
 
   const [apiError, setApiError] = useState("")
-  
+
   // Handle API errors consistently
   const handleApiError = useCallback((error: unknown, context: string) => {
     const errorMessage =
@@ -47,7 +47,7 @@ export default function TranscriptionSummaryPage() {
     } catch (err) {
       handleApiError(err, "Failed to fetch Transcript")
       throw err
-    } 
+    }
   }, [sessionId, handleApiError])
 
   const fetchSummary = useCallback(async () => {
@@ -148,11 +148,8 @@ export default function TranscriptionSummaryPage() {
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
         >
           <main>
-             <Suspense fallback={<Loading />}>
-            <SummaryGenerator 
-              handleSaveAsDraft={handleSaveSummary} 
-              handleApproveSummary={handleApproveSummary}
-            />
+            <Suspense fallback={<Loading />}>
+              <SummaryGenerator />
             </Suspense>
           </main>
         </div>
