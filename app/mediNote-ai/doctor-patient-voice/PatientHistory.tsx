@@ -25,7 +25,59 @@ interface PatientHistoryProps {
   patientId: number;
 }
 
+interface ParsedSession {
+  date: string;
+  session: string;
+  summary: string;
+  doctorInsights: string[];
+  patientInsights: string[];
+}
+
 export default function PatientHistory({ patientId }: PatientHistoryProps) {
+
+  const parseHistoryField = (rawHistory: string): ParsedSession[] => {
+  const parts = rawHistory.split('---').filter(Boolean);
+
+  return parts.map((block) => {
+    const dateMatch = block.match(/Date:\s*(.+)/);
+    const sessionMatch = block.match(/Session\s*(\d+)\s*summary:/);
+    const summaryStart = block.indexOf('summary:');
+    const summaryContent = block.slice(summaryStart + 8).trim();
+
+    const doctorSplit = summaryContent.split('### Doctor Call Insights');
+    const summary = doctorSplit[0].trim();
+
+    let doctorInsights: string[] = [];
+    let patientInsights: string[] = [];
+
+    if (doctorSplit[1]) {
+      const patientSplit = doctorSplit[1].split('### Patient Call Insights');
+      doctorInsights = extractBullets(patientSplit[0]);
+
+      if (patientSplit[1]) {
+        const followUpSplit = patientSplit[1].split('### Follow-up Appointment');
+        patientInsights = extractBullets(followUpSplit[0]);
+      }
+    }
+
+    return {
+      date: dateMatch ? dateMatch[1].trim() : '',
+      session: sessionMatch ? sessionMatch[1].trim() : '',
+      summary,
+      doctorInsights,
+      patientInsights,
+    };
+  });
+};
+
+const extractBullets = (text: string): string[] => {
+  return text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('-'))
+    .map(line => line.replace(/^-\s*/, ''));
+};
+
   const [patientData, setPatientData] = useState<PatientHistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,12 +144,53 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
         </div>
       </div>
 
-      <div className="history-section mb-4">
-        <h4 className="font-medium text-gray-700">Medical History</h4>
-        <div className="mt-2 p-3 bg-gray-50 rounded">
-          {patientData.history || "No medical history recorded"}
+     <div className="history-section mb-4">
+  <h4 className="font-medium text-gray-700">Medical History</h4>
+  {patientData.history ? (
+    <div className="mt-2 space-y-4 max-h-[400px] overflow-y-auto pr-2">
+      {parseHistoryField(patientData.history).map((session, index) => (
+        <div key={index} className="p-4 border rounded bg-gray-50">
+          <div className="font-semibold">Session #{session.session}</div>
+          <div className="text-sm text-gray-500">
+            Date: {new Date(session.date).toLocaleString()}
+          </div>
+
+          <div className="mt-2">
+            <p className="font-medium">Summary:</p>
+            <pre className="whitespace-pre-wrap bg-white p-2 border rounded mt-1">
+              {session.summary}
+            </pre>
+          </div>
+
+          {session.doctorInsights.length > 0 && (
+            <div className="mt-3">
+              <p className="font-medium">Doctor Call Insights:</p>
+              <ul className="list-disc list-inside text-sm">
+                {session.doctorInsights.map((insight, i) => (
+                  <li key={i}>{insight}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {session.patientInsights.length > 0 && (
+            <div className="mt-3">
+              <p className="font-medium">Patient Call Insights:</p>
+              <ul className="list-disc list-inside text-sm">
+                {session.patientInsights.map((insight, i) => (
+                  <li key={i}>{insight}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
-      </div>
+      ))}
+    </div>
+  ) : (
+    <div className="mt-2 p-3 bg-gray-50 rounded">No medical history recorded</div>
+  )}
+</div>
+
 
       <div className="visits-section">
         <h4 className="font-medium text-gray-700">Previous Visits</h4>
