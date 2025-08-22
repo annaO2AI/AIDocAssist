@@ -255,9 +255,15 @@ body {
     border-radius: 10px;
   }
   .mediNote-widthfix-warpper{
-    min-height: calc(100vh - 290px);
+    min-height: calc(100vh - 153px);
     display: flex;
     flex-direction: column;
     justify-content: end;
+  }
+  .Patient-voice{
+    height: calc(100vh - 250px);
+  }
+  .transcriptDoctorPatient{
+       max-height: calc(100vh - 350px);
   }
 }

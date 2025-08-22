@@ -19,20 +19,38 @@ const ViewPatientList = ({
     audio.play().catch((error) => console.error("Error playing audio:", error));
   };
 
+  const initials = patient.name
+    .split(' ')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');
+
   return (
-    <div className="max-w-sm rounded-lg overflow-hidden shadow-lg bg-white border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-      <div className="px-6 py-4">
-        <div className="flex justify-between items-start">
+    <div className="max-w-md rounded-lg overflow-hidden shadow-lg bg-white border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+      <div className="px-12 py-8">
+        <div className="">
           <div>
-            <div className="font-bold text-xl text-gray-800 mb-2">
-              {patient.name}
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white text-lg font-semibold">
+                {initials}
+              </div>
+              <div className="font-bold text-xl text-gray-800 mb-2">
+                {patient.name}
+              </div>
             </div>
-            <p className="text-gray-600 text-sm py-2">Patient ID: {patient.patient_id}</p>
-            <p className="text-gray-600 text-sm py-2">Patient Voice Exists: {patient.exists ? "Exists" : "Not exists"}</p>
+            <div className="text-gray-600 text-sm py-1">
+              <span className="ot-title font-bold">Patient ID: </span>
+              <span className="osubtitle">{patient.patient_id}</span>
+            </div>
+            <div className="text-gray-600 text-sm py-1">
+              <span className="ot-title font-bold">Patient Voice Exists: </span>
+              <span className="osubtitle ">{patient.exists ? "Exists" : "Not exists"}</span>
+            </div>
           </div>
-          <div>
+          <div className="flex justify-between items-center">
             <span
-              className={`inline-block px-3 py-1 text-xs font-semibold ${
+              className={`inline-block px-0 py-1 text-md font-semibold ${
                 patient.exists
                   ? "text-green-800 "
                   : "text-red-800 "
@@ -42,7 +60,7 @@ const ViewPatientList = ({
             </span>
             <button
               onClick={() => handleStartCon(patient.patient_id)}
-              className="text-green-800 bg-green-100 inline-block rounded-full px-4 py-1 text-xs font-semibold mt-2"
+              className="text-white bg-blue-500 inline-block rounded-full px-4 py-2 text-sm font-normale mt-2"
             >
               Start Session
             </button>

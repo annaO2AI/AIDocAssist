@@ -1,6 +1,6 @@
-// components/TranscriptionInterface.tsx
 import React, { useEffect, useRef, useState } from "react"
 import { useTranscriptionWebSocket } from "./useTranscriptionWebSocket"
+import WelcomeMessage from "./WelcomeMessage"
 import {
   AudioLineIcon,
   Speeker,
@@ -119,67 +119,90 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
         {/* Transcription Display */}
         <div className="mt-10">
           {transcription.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <svg
-                className="w-16 h-16 mx-auto mb-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012 2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                />
-              </svg>
-              <p>
-                {isConnected
-                  ? "No transcription yet. Start recording to begin."
-                  : "Connect to begin transcription."}
-              </p>
-            </div>
+            <WelcomeMessage username={"Doctor"} />
+            // <div className="text-center py-12 text-gray-500">
+            //   <svg
+            //     className="w-16 h-16 mx-auto mb-4 text-gray-300"
+            //     fill="none"
+            //     stroke="currentColor"
+            //     viewBox="0 0 24 24"
+            //   >
+            //     <path
+            //       strokeLinecap="round"
+            //       strokeLinejoin="round"
+            //       strokeWidth={1.5}
+            //       d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012 2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+            //     />
+            //   </svg>
+            //   <p>
+            //     {isConnected
+            //       ? "No transcription yet. Start recording to begin."
+            //       : "Connect to begin transcription."}
+            //   </p>
+            // </div>
           ) : (
-            <div className="space-y-4 max-h-80 overflow-y-auto p-2">
+            <div className="space-y-4 overflow-y-auto p-2 transcriptDoctorPatient">
               {transcription.map((msg: any, index: number) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-xl border-l-4 transition-all duration-200 hover:shadow-md ${
+                  className={`p-2 rounded-xl border-l-4 transition-all duration-200 hover:shadow-md ${
                     msg.type === "turn-final"
-                      ? "bg-green-50 border-green-400 hover:bg-green-100"
+                      ? "bg-white border-blue-400 hover:bg-white"
                       : msg.type === "error"
                       ? "bg-red-50 border-red-400 hover:bg-red-100"
                       : "bg-blue-50 border-blue-400 hover:bg-blue-100"
                   }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        <span
-                          className={`font-semibold text-sm px-2 py-1 rounded ${
-                            msg.speaker === "Doctor"
-                              ? "bg-blue-100 text-blue-700"
-                              : msg.speaker === "Patient"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {msg.speaker || "System"}
-                        </span>
-                        {msg.t0 && msg.t1 && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-3 items-center">
+                      <div className="flex items-center">
+                        <div className="flex items-center space-x-2">
+                          {msg.speaker === "Doctor" && (
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-normal">
+                              DR
+                            </div>
+                          )}
+                          {msg.speaker === "Patient" && (
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600 text-white text-sm font-normal">
+                              PA
+                            </div>
+                          )}
+                          {msg.speaker === "Unknown" && (
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-600 text-white text-sm font-normal">
+                              UN
+                            </div>
+                          )}
+                          {/* <span
+                            className={`font-semibold text-sm px-2 py-1 rounded-full ${
+                              msg.speaker === "Doctor"
+                                ? "bg-blue-100 text-blue-700"
+                                : msg.speaker === "Patient"
+                                ? "bg-green-100 text-green-700"
+                                : msg.speaker === "Unknown"
+                                ? "bg-gray-100 text-gray-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {msg.speaker === "Doctor" && <span>Dr</span>}
+                            {msg.speaker === "Patient" && <span>Pa</span>}
+                            {msg.speaker === "Unknown" && <span>Un</span>}
+                            {msg.speaker || "System"}
+                          </span> */}
+                        </div>
+                      </div>
+                      <p className="text-gray-800 leading-relaxed">
+                        {msg.text || msg.msg}
+                         {msg.t0 && msg.t1 && (
                           <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                             {(msg.t1 - msg.t0).toFixed(1)}s
                           </span>
                         )}
-                      </div>
-                      <p className="text-gray-800 leading-relaxed">
-                        {msg.text || msg.msg}
                       </p>
                     </div>
                   </div>
                 </div>
               ))}
-              {/* <div ref={transcriptEndRef} /> */}
+              <div ref={transcriptEndRef} />
             </div>
           )}
         </div>

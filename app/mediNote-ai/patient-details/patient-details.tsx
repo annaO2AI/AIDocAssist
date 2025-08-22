@@ -4,6 +4,7 @@ import UserCard from "../components/UserCard";
 import { APIService } from "../service/api";
 import { UpdateUserModal } from "../components/UpdateUserModal";
 import { PatientVoiceEnroll } from "../components/PatientVoiceEnroll";
+import Image from 'next/image';
 
 interface ApiResponse {
   results: patient[];
@@ -121,7 +122,7 @@ const SearchPatient: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-800 auto-margin mx-auto">Patient Details</h1>
 
         {/* Search Input */}
-        <div className="relative mx-auto w-[650px]">
+        <div className="relative mx-auto w-[750px]">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
               className="h-5 w-5 text-gray-400"
@@ -138,7 +139,7 @@ const SearchPatient: React.FC = () => {
           </div>
           <input
             type="text"
-            className="w-[650px] block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="w-[750px] block h-[60px] w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Search patients"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -202,7 +203,14 @@ const SearchPatient: React.FC = () => {
         {!loading && !error && !hasSearched && (
           <div className="col-span-full text-center py-8">
             <p className="text-gray-500">
-              Enter a search query to find patients
+              <Image 
+                    src="/File searching.gif" 
+                    alt="I Search" 
+                    width={240} 
+                    height={240} 
+                    className="imagfilter m-auto"
+                />
+              Enter a search query to find patients 
             </p>
           </div>
         )}
