@@ -1,108 +1,123 @@
 //PatientForm.tsx
-'use client'; // Mark this as a Client Component
+"use client" // Mark this as a Client Component
 
-import { useEffect, useState } from 'react';
-import { PatientCreationTypes } from '../types';
+import { useEffect, useState } from "react"
+import { PatientCreationTypes } from "../types"
 // import { APIService } from '../service/api';
-import { decodeJWT } from '@/app/utils/decodeJWT';
-import { APIService } from '../service/api';
-import Image from 'next/image';
+import { decodeJWT } from "@/app/utils/decodeJWT"
+import { APIService } from "../service/api"
+import Image from "next/image"
 
 export default function PatientForm() {
   const [formData, setFormData] = useState<PatientCreationTypes>({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    ssn_last4: '',
-    address: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [token ,setToken] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    ssn_last4: "",
+    address: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [token, setToken] = useState<string>("")
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [registeredPatientId, setRegisteredPatientId] = useState<number | null>(
+    null
+  )
 
   useEffect(() => {
-    const cookies = document.cookie.split(";").map((c) => c.trim());
+    const cookies = document.cookie.split(";").map((c) => c.trim())
     const token = cookies
       .find((c) => c.startsWith("access_token="))
-      ?.split("=")[1]; 
-      if(token){
-        setToken(token)
-      }  
-  }, []);
-  
+      ?.split("=")[1]
+    if (token) {
+      setToken(token)
+    }
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+    const { name, value } = e.target
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }));
-  };
+      [name]: value,
+    }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     setIsSubmitting(true)
-    try{
-    const response = await APIService.registerPatient(formData)
-    if (!response) {
-      throw new Error("No response received from server");
-    }
-    setFormData({
-      first_name: '',
-      last_name: '',
-      email: '',
-      phone: '',
-      ssn_last4: '',
-      address: ''
-    })
-    setSuccessMessage("Patient registered successfully!");
+    try {
+      const response = await APIService.registerPatient(formData)
+      if (!response) {
+        throw new Error("No response received from server")
+      }
+      setRegisteredPatientId(response.id)
+      setFormData({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone: "",
+        ssn_last4: "",
+        address: "",
+      })
+      setSuccessMessage("Patient registered successfully!")
     } catch (error) {
-      console.error("Registration failed:", error);
-      setError(error instanceof Error ? error.message : "Registration failed");
+      console.error("Registration failed:", error)
+      setError(error instanceof Error ? error.message : "Registration failed")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleBackToForm = () => {
-    setSuccessMessage(null);
-    setError(null);
-  };
+    setSuccessMessage(null)
+    setError(null)
+  }
 
   return (
-    <div className='mt-12 pt-6 '>
-      <h1 className=" max-w-xl text-2xl mt-6 mx-auto font-bold mb-6 text-gray-800">Patient Registration</h1>
+    <div className="mt-12 pt-6 ">
+      <h1 className=" max-w-xl text-2xl mt-6 mx-auto font-bold mb-6 text-gray-800">
+        Patient Registration
+      </h1>
       <div className="max-w-xl mt-6 mx-auto p-6 bg-white rounded-lg shadow-md">
         {error && !successMessage && (
-          <div className={`mb-4 p-3 rounded ${!error ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          <div
+            className={`mb-4 p-3 rounded ${
+              !error ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            }`}
+          >
             {error}
           </div>
         )}
         {successMessage ? (
           <div className="mb-4 p-8 rounded bg-white-100 ttext-centerext">
-               <Image 
-                    src="/Celebration-amico.svg" 
-                    alt="I Search" 
-                    width={200} 
-                    height={200} 
-                    className="imagfilter m-auto"
-                />
-            <h2 className='text-xl mb-4 font-bold text-green-500 text-center'>Patient registered successfully! </h2>
+            <Image
+              src="/Celebration-amico.svg"
+              alt="I Search"
+              width={200}
+              height={200}
+              className="imagfilter m-auto"
+            />
+            <h2 className="text-xl mb-4 font-bold text-green-500 text-center">
+              Patient registered successfully!{" "}
+            </h2>
 
-            <div className=' m-auto text-center'>
+            {/* <div className=' m-auto text-center'>
               <span className='font-bold'>Patient Name:</span>
               <span className='ot-title'> David Brown</span>
-            </div>
-            <div className='m-auto mb-2 text-center'>
-              <span className='font-bold'>Patient ID:</span>
-              <span className='ot-title'> 4</span>
+            </div> */}
+            <div className="m-auto mb-2 text-center">
+              <span className="font-bold">Patient ID:</span>
+              <span className="ot-title"> {registeredPatientId}</span>
             </div>
 
-            <p className='text-sm mb-4 ot-title text-center'>Thank you for your submission. We have received your information. Your patient profile has been created</p>
-            <button 
+            <p className="text-sm mb-4 ot-title text-center">
+              Thank you for your submission. We have received your information.
+              Your patient profile has been created
+            </p>
+            <button
               onClick={handleBackToForm}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300" 
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
             >
               Back to Patient Registration
             </button>
@@ -110,7 +125,10 @@ export default function PatientForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="first_name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 First Name
               </label>
               <input
@@ -125,7 +143,10 @@ export default function PatientForm() {
             </div>
 
             <div>
-              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="last_name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Last Name
               </label>
               <input
@@ -140,7 +161,10 @@ export default function PatientForm() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email
               </label>
               <input
@@ -155,7 +179,10 @@ export default function PatientForm() {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Phone
               </label>
               <input
@@ -170,7 +197,10 @@ export default function PatientForm() {
             </div>
 
             <div>
-              <label htmlFor="ssn_last4" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="ssn_last4"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Last 4 digits of SSN
               </label>
               <input
@@ -187,7 +217,10 @@ export default function PatientForm() {
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="address"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Address
               </label>
               <input
@@ -207,12 +240,12 @@ export default function PatientForm() {
                 disabled={isSubmitting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </form>
         )}
       </div>
     </div>
-  );
+  )
 }

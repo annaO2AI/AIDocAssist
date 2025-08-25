@@ -232,7 +232,7 @@ export default function SummaryGeneration({
         </div>
 
         {/* Audio Player */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        {/* <div className="bg-gray-50 rounded-lg p-4">
           <div className="flex items-center space-x-4">
             <button
               // onClick={togglePlayPause}
@@ -261,7 +261,7 @@ export default function SummaryGeneration({
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Patient Info */}
         <div className="mt-6 space-y-2 text-sm">
