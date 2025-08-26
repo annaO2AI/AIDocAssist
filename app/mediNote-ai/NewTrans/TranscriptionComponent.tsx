@@ -8,6 +8,7 @@ import {
 } from "@/app/chat-ui/components/icons"
 import { TranscriptionSummary } from "../types"
 import { APIService } from "../service/api"
+import Image from 'next/image';
 
 interface TranscriptionInterfaceProps {
   sessionId: number
@@ -86,17 +87,23 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
                 </p>
               </div>
             ) : (
-              <>
-                <h3 className="text-lg font-medium mb-4">
+              <div className="flex justify-center flex-col items-center p-10">
+                      <Image
+                        src="/stoprecording-conversation.svg"
+                        alt="stop recording"
+                        width={136.35}
+                        height={117.99}
+                      />
+                <h3 className="text-xl font-medium mb-0 mt-10">
                   Are you sure you want to stop the recording?
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 mb-8">
                   The current conversation will be saved and processed.
                 </p>
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={cancelStopRecording}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    className="px-4 py-2  hover:text-blue-800 bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg"
                     disabled={isProcessing}
                   >
                     Continue recording
@@ -109,7 +116,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
                     Stop recording & Generate summary note
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>

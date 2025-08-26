@@ -48,6 +48,10 @@ body {
   .header-widthfix{
     width: 70%
   }
+   .summaryGeneration-widthfix{
+    width: 76%;
+    background-color: #fff;
+  }
   .o2AlignSearchm1-center{
     align-content: flex-end;
   }
@@ -272,4 +276,7 @@ body {
     flex-direction: column;
     justify-content: center;
   }
+  .custom-gradient {
+  background: linear-gradient(to right, #EDFAFF, #F0EEFF);
+}
 }
