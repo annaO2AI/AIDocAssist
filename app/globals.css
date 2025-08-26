@@ -266,4 +266,10 @@ body {
   .transcriptDoctorPatient{
        max-height: calc(100vh - 350px);
   }
+  .mediNote-widthfix-warpper-center{
+    min-height: calc(100vh - 153px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 }

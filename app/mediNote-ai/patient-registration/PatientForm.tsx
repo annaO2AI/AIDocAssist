@@ -92,13 +92,13 @@ export default function PatientForm() {
         {successMessage ? (
           <div className="mb-4 p-8 rounded bg-white-100 ttext-centerext">
             <Image
-              src="/Celebration-amico.svg"
+              src="/checked-tick-svgrepo-com.svg"
               alt="I Search"
-              width={200}
-              height={200}
+              width={120}
+              height={120}
               className="imagfilter m-auto"
             />
-            <h2 className="text-xl mb-4 font-bold text-green-500 text-center">
+            <h2 className="text-xl mt-6 mb-4 font-bold text-green-500 text-center">
               Patient registered successfully!{" "}
             </h2>
 

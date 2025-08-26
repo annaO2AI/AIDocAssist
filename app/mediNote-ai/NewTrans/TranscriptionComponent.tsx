@@ -115,7 +115,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
         </div>
       )}
 
-      <div className="mediNote-widthfix-warpper">
+      <div  className={transcription.length === 0 ? 'mediNote-widthfix-warpper-center' : 'mediNote-widthfix-warpper'}>
         {/* Transcription Display */}
         <div className="mt-10">
           {transcription.length === 0 ? (
@@ -192,11 +192,11 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
                       </div>
                       <p className="text-gray-800 leading-relaxed">
                         {msg.text || msg.msg}
-                         {msg.t0 && msg.t1 && (
+                         {/* {msg.t0 && msg.t1 && (
                           <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                             {(msg.t1 - msg.t0).toFixed(1)}s
                           </span>
-                        )}
+                        )} */}
                       </p>
                     </div>
                   </div>
