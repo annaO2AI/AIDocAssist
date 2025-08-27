@@ -55,7 +55,7 @@ export default function HeaderAISearch({ sidebarOpen }: HeaderProps) {
               ? "shadow-md border-b border-white/30"
               : "border-b border-white/10",
             sidebarOpen
-              ? "pl-[240px]"
+              ? "pl-[213px]"
               : pathname === "/" || pathname === "/aiops" || pathname === "/talent-acquisition" || pathname === "/human-resources"
               ? "pl-[0]"
               : "w-full"

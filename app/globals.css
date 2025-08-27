@@ -250,7 +250,7 @@ body {
     box-shadow: 1px 1px 10px #0713b949;
   }
   .mediNote-widthfix{
-    width: 77%;
+    width: 74%;
   }
   .controle-search-AIDocAssist{
     background-color: #fff;
@@ -278,5 +278,8 @@ body {
   }
   .custom-gradient {
   background: linear-gradient(to right, #EDFAFF, #F0EEFF);
+}
+.enrollDoctorVoice{
+  overflow: auto;
 }
 }

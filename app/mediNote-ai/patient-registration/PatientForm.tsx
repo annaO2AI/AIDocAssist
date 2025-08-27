@@ -76,10 +76,10 @@ export default function PatientForm() {
 
   return (
     <div className="mt-12 pt-6 ">
-      <h1 className=" max-w-xl text-2xl mt-6 mx-auto font-bold mb-6 text-gray-800">
+      <h1 className=" max-w-xl text-2xl mt-6 mx-auto font-bold mb-6 text-gray-800 text-center">
         Patient Registration
       </h1>
-      <div className="max-w-xl mt-6 mx-auto p-6 bg-white rounded-lg shadow-md">
+      <div className="max-w-xl mt-6 mx-auto p-12 bg-white rounded-xl border-o2 mb-12">
         {error && !successMessage && (
           <div
             className={`mb-4 p-3 rounded ${
@@ -97,9 +97,10 @@ export default function PatientForm() {
               width={120}
               height={120}
               className="imagfilter m-auto"
+              unoptimized
             />
-            <h2 className="text-xl mt-6 mb-4 font-bold text-green-500 text-center">
-              Patient registered successfully!{" "}
+            <h2 className="text-3xl mt-6 mb-4 font-normal text-green-500 text-center">
+              Patient registered successfully{" "}
             </h2>
 
             {/* <div className=' m-auto text-center'>
@@ -107,17 +108,17 @@ export default function PatientForm() {
               <span className='ot-title'> David Brown</span>
             </div> */}
             <div className="m-auto mb-2 text-center">
-              <span className="font-bold">Patient ID:</span>
+              <span className="font-bold ot-title">Patient ID:</span>
               <span className="ot-title"> {registeredPatientId}</span>
             </div>
 
-            <p className="text-sm mb-4 ot-title text-center">
+            <p className="text-sm mb-4 ot-title text-center osubtitle">
               Thank you for your submission. We have received your information.
               Your patient profile has been created
             </p>
             <button
               onClick={handleBackToForm}
-              className="w-[250px] flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+              className="w-[250px] m-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
             >
               Back to Patient Registration
             </button>

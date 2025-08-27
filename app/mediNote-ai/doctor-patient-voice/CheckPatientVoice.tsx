@@ -85,9 +85,9 @@ export default function CheckPatientVoice({
 
   return (
     <div className="Patient-voice mx-auto mb-6 mediNote-widthfix pl-4 mt-16">
-      <div className="w-full flex gap-3 items-start justify-between pr-16">
-        <div className="relative mb-2">
-          <div className="pb-1 ot-title font-medium">Search Patients ID</div>
+      <div className="w-full flex gap-3 items-start justify-between">
+        <div className="relative mb-2 w-[800px]">
+          <div className="pb-1 ot-title font-medium text-xl">Search Patients ID</div>
           <div className="absolute inset-y-0 top-8 left-0 pl-3 flex items-center pointer-events-none">
             <svg
               className="h-5 w-5 text-gray-400"
@@ -104,7 +104,7 @@ export default function CheckPatientVoice({
           </div>
           <input
             type="text"
-            className="block w-[540px] pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-[45px]"
+            className="block h-[50px] w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-[45px]"
             placeholder="Search patients by ID"
             value={searchQuery}
             onChange={(e) => {
@@ -116,7 +116,7 @@ export default function CheckPatientVoice({
       </div>
 
       <div>
-        <div className="flex ">
+        <div className="flex flex-col gap-3">
           <div className="w-3/5 ">
             {loading && (
               <div className="p-4 text-center text-gray-500">
@@ -137,7 +137,7 @@ export default function CheckPatientVoice({
               />
             )}
           </div>
-          <div className="w-2/5 ">
+          <div className="full ">
             {selectedPatientId && (
               <PatientHistory patientId={selectedPatientId} />
             )}
