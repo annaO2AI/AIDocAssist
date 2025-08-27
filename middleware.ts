@@ -118,7 +118,7 @@ export async function middleware(req: NextRequest) {
 
     const res = NextResponse.redirect(login);
     // loop guard (5 min)
-    res.cookies.set("auth_redirected", "1", { path: "/", maxAge: 300, httpOnly: false });
+    res.cookies.set("auth_redirected", "1", { path: "/", maxAge: 28800, httpOnly: false });
     return res;
   }
 
