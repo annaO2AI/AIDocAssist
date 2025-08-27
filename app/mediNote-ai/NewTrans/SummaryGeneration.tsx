@@ -45,6 +45,7 @@ export default function SummaryGeneration({
   })
   const [summaryId, setSummaryId] = useState<SummaryText | null>(null)
   const [summaryContent, setSummaryContent] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(true)
 
   const handleApiError = useCallback(
     (error: unknown, context: string) => {
@@ -61,12 +62,18 @@ export default function SummaryGeneration({
   }
 
   const fetchSummaryById = useCallback(async () => {
-    if (!sessionId) return
+    if (!sessionId){
+      setIsLoading(false)
+      return
+    }
     try {
+      setIsLoading(true)
       const data = await APIService.getSummaryById(sessionId)
       if (data) setSummaryId(data)
     } catch (err) {
       handleApiError(err, "Failed to fetch summary")
+    } finally {
+      setIsLoading(false)
     }
   }, [sessionId, handleApiError])
 
@@ -74,18 +81,43 @@ export default function SummaryGeneration({
     fetchSummaryById()
   }, [fetchSummaryById])
 
+  // Parse and format the entire content dynamically
+  const parseContentSections = (content: string) => {
+    if (!content) return []
+    
+    // Split content by headers (# or ##)
+    const sections = content.split(/(?=^#+ )/m).filter(section => section.trim())
+    
+    return sections.map(section => {
+      const lines = section.trim().split('\n')
+      const headerLine = lines[0]
+      const contentLines = lines.slice(1)
+      
+      // Extract header text and level
+      const headerMatch = headerLine.match(/^(#+)\s*(.+)/)
+      if (!headerMatch) return null
+      
+      const level = headerMatch[1].length
+      const title = headerMatch[2].trim()
+      const content = contentLines.join('\n').trim()
+      
+      return { level, title, content }
+    }).filter(Boolean)
+  }
+
   useEffect(() => {
-    const content =
-      summaryId?.summary?.content
-        .split("## Summary")[1]
-        ?.split("### Doctor Call Insights")[0]
-        ?.trim() || "Summary content not available."
-    setSummaryContent(content)
+    if (!summaryId?.summary?.content) {
+      setSummaryContent("Summary content not available.")
+      return
+    }
+
+    setSummaryContent(summaryId.summary.content)
   }, [summaryId])
 
   const handleSaveEditedSummary = async () => {
     if (!transcriptionEnd?.summary_id) return
     try {
+      setIsLoading(true)
       await APIService.editSummary({
         summaryId: transcriptionEnd.summary_id,
         edited_text: editedSummary,
@@ -95,11 +127,14 @@ export default function SummaryGeneration({
       showNotification("Summary updated successfully!")
     } catch (err) {
       handleApiError(err, "Failed to update summary")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleSaveSummary = async () => {
     try {
+      setIsLoading(true)
       await APIService.saveSummary({
         doctor_id: 0,
         patient_id: patientId,
@@ -110,33 +145,124 @@ export default function SummaryGeneration({
       showNotification("Summary saved successfully!")
     } catch (err) {
       handleApiError(err, "Failed to save summary")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleApproveSummary = async () => {
     try {
+      setIsLoading(true)
       await APIService.saveFinalSummary({ session_id: sessionId })
       showNotification("Summary approved successfully!")
     } catch (err) {
       handleApiError(err, "Failed to approve summary")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  // Helper for cleaning and structuring bullets
+  // Updated helper for cleaning and structuring bullets
   const processDoctorInsights = (bullets: string[] = []) => {
-    const clean = (str: string) => str.replace(/[*#]+/g, "").trim()
+    const clean = (str: string) => {
+      return str
+        .replace(/[*#]+/g, "")
+        .replace(/^-\s*/, "")
+        .replace(/^\w+\s*-\s*/, "") // Remove prefixes like "Treatment:" or "Instructions:"
+        .trim()
+    }
+    
     const sections: Record<string, string[]> = {
-      Summary: [],
-      "Follow-ups": [],
+      Treatment: [],
+      Instructions: [],
       General: [],
     }
+    
     bullets.forEach((text) => {
       const cleanText = clean(text)
-      if (/summary/i.test(text)) sections.Summary.push(cleanText)
-      else if (/follow[- ]?up/i.test(text)) sections["Follow-ups"].push(cleanText)
-      else sections.General.push(cleanText)
+      if (cleanText) {
+        if (/treatment|therapy|medication|administered/i.test(text)) {
+          sections.Treatment.push(cleanText)
+        } else if (/instruction|education|precaution/i.test(text)) {
+          sections.Instructions.push(cleanText)
+        } else {
+          sections.General.push(cleanText)
+        }
+      }
     })
+    
     return sections
+  }
+
+  // Updated patient insights processing
+  const processPatientInsights = (bullets: string[] = []) => {
+    return bullets.map(bullet => 
+      bullet
+        .replace(/[*#]+/g, "")
+        .replace(/^-\s*/, "")
+        .replace(/^\w+\s*Summary\s*-\s*/i, "")
+        .trim()
+    ).filter(bullet => bullet.length > 0)
+  }
+
+  // Render formatted content sections
+  const renderContentSections = (content: string) => {
+    const sections = parseContentSections(content)
+    
+    return sections.map((section, index) => {
+      if (!section) return null
+      
+      const { level, title, content: sectionContent } = section
+      
+      // Parse bullet points and format them
+      const formatContent = (text: string) => {
+        const lines = text.split('\n').filter(line => line.trim())
+        
+        return lines.map((line, lineIndex) => {
+          const trimmed = line.trim()
+          if (!trimmed) return null
+          
+          // Handle bullet points
+          if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
+            const bulletText = trimmed.replace(/^[-•]\s*/, '').trim()
+            return (
+              <li key={lineIndex} className="text-gray-700 text-sm leading-relaxed ml-4 mb-1">
+                {bulletText}
+              </li>
+            )
+          }
+          
+          // Handle regular text
+          return (
+            <p key={lineIndex} className="text-gray-700 text-sm leading-relaxed mb-2">
+              {trimmed}
+            </p>
+          )
+        }).filter(Boolean)
+      }
+      
+      const HeaderTag = level === 1 ? 'h2' : 'h3'
+      const headerClass = level === 1 
+        ? 'text-lg font-semibold text-gray-900 mb-3 mt-6 first:mt-0' 
+        : 'text-md font-medium text-gray-800 mb-2 mt-4'
+      
+      return (
+        <div key={index} className="mb-4">
+          <HeaderTag className={headerClass}>
+            {title}
+          </HeaderTag>
+          <div className="pl-2">
+            {sectionContent.includes('-') || sectionContent.includes('•') ? (
+              <ul className="list-none space-y-1">
+                {formatContent(sectionContent)}
+              </ul>
+            ) : (
+              <div>{formatContent(sectionContent)}</div>
+            )}
+          </div>
+        </div>
+      )
+    })
   }
 
   // Safely access nested fields with fallback defaults
@@ -144,17 +270,27 @@ export default function SummaryGeneration({
   const symptoms = summaryId?.summary?.ui?.chips?.[1]?.value ?? "Not specified"
   const durationText = summaryId?.summary?.ui?.chips?.[2]?.value ?? "Not specified"
   const familyHistory = summaryId?.summary?.ui?.chips?.[3]?.value ?? "Not specified"
-  const nextSteps = summaryId?.summary?.ui?.chips?.[4]?.value?.replace("** ", "") ?? ""
+  const nextSteps = summaryId?.summary?.ui?.chips?.[4]?.value?.replace(/\*\*/g, "") ?? ""
   const doctorName = summaryId?.summary?.ui?.insights?.doctor?.by ?? "Doctor"
   const doctorBullets = summaryId?.summary?.ui?.insights?.doctor?.bullets ?? []
   const structuredInsights = processDoctorInsights(doctorBullets)
-  const patientInsights = summaryId?.summary?.ui?.insights?.patient?.bullets ?? []
-  const followupNote = summaryId?.summary?.ui?.followup?.note?.replace("** ", "") ?? ""
+  const patientBullets = summaryId?.summary?.ui?.insights?.patient?.bullets ?? []
+  const processedPatientInsights = processPatientInsights(patientBullets)
+  const followupNote = summaryId?.summary?.ui?.followup?.note?.replace(/\*\*/g, "") ?? ""
   const followupDate = summaryId?.summary?.ui?.followup?.date ?? "To be scheduled"
 
+  console.log(summaryContent, "summaryContent")
+
+  const Loader = () => (
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75 z-50">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+    </div>
+  )
+  
   return (
     <>
-    <div className="summaryGeneration-widthfix w-full mx-auto p-6 bg-gray-50 min-h-screen mt-12 border-o3 rounded-lg">
+      {isLoading && <Loader />} 
+      <div className={`summaryGeneration-widthfix w-full mx-auto p-6 bg-gray-50 min-h-screen mt-12 border-o3 rounded-lg ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
       {/* Notification */}
       {notification.show && (
         <div className="fixed top-4 right-4 z-50">
@@ -183,7 +319,7 @@ export default function SummaryGeneration({
             onClick={() => {
               setIsEdit(!isEdit)
               if (!isEdit) {
-                setEditedSummary(summaryContent.replace(/\n/g, " ").trim())
+                setEditedSummary(summaryContent)
               } else {
                 handleSaveEditedSummary()
               }
@@ -217,14 +353,18 @@ export default function SummaryGeneration({
            <div className="w-full">
             {isEdit ? (
             <textarea
-              className="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full h-96 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               value={editedSummary}
-              onChange={(e) =>
-                setEditedSummary(e.target.value.replace(/\n/g, " ").trim())
-              }
+              onChange={(e) => setEditedSummary(e.target.value)}
             />
               ) : (
-                <p className="text-gray-700 text-sm leading-relaxed">{summaryContent}</p>
+                <div className="text-gray-700 text-sm leading-relaxed">
+                  {summaryContent === "Summary content not available." ? (
+                    <p>{summaryContent}</p>
+                  ) : (
+                    renderContentSections(summaryContent)
+                  )}
+                </div>
               )}
             </div>
             <div className="w-[400px] flex  items-center">
@@ -278,10 +418,10 @@ export default function SummaryGeneration({
             <div className="flex-1">
               <h3 className="font-medium text-gray-900 mb-1">Patient Call Insights</h3>
               <p className="text-sm text-gray-600 mb-3">{patientName}</p>
-              {patientInsights.length > 0 ? (
+              {processedPatientInsights.length > 0 ? (
                 <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-                  {patientInsights.map((ins, idx) => (
-                    <li key={idx}>{ins}</li>
+                  {processedPatientInsights.map((insight, idx) => (
+                    <li key={idx}>{insight}</li>
                   ))}
                 </ul>
               ) : (
@@ -296,7 +436,6 @@ export default function SummaryGeneration({
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6 custom-gradient">
         <div className="flex items-start space-x-3">
           <div className="w-10 h-10  rounded-lg flex items-center justify-center">
-            {/* <Calendar className="w-5 h-5 text-purple-600" /> */}
              <Image
                 src="/follow-up-appointment.svg"
                 alt="follow-up"
