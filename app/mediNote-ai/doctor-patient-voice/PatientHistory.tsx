@@ -28,9 +28,7 @@ interface PatientHistoryProps {
 interface ParsedSession {
   date: string;
   session: string;
-  summary: string;
-  doctorInsights: string[];
-  patientInsights: string[];
+  sections: { title: string; content: string[] }[];
 }
 
 export default function PatientHistory({ patientId }: PatientHistoryProps) {
@@ -43,38 +41,48 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
       const summaryStart = block.indexOf('summary:');
       const summaryContent = block.slice(summaryStart + 8).trim();
 
-      const doctorSplit = summaryContent.split('### Doctor Call Insights');
-      const summary = doctorSplit[0].trim();
+      // Split by headers (# or ##) without relying on dotAll
+      const sectionRegex = /(^#+ .+)(?:\n(?![#]+ )|$)/gm;
+      const sectionMatches = summaryContent.match(sectionRegex) || [];
+      let remainingContent = summaryContent;
+      const sections: { title: string; content: string[] }[] = [];
 
-      let doctorInsights: string[] = [];
-      let patientInsights: string[] = [];
+      sectionMatches.forEach((header, index) => {
+        const headerText = header.replace(/^#+ /, '').trim();
+        const startIdx = summaryContent.indexOf(header) + header.length;
+        const nextHeaderIdx = sectionMatches[index + 1]
+          ? summaryContent.indexOf(sectionMatches[index + 1])
+          : summaryContent.length;
+        const content = summaryContent.slice(startIdx, nextHeaderIdx).trim();
 
-      if (doctorSplit[1]) {
-        const patientSplit = doctorSplit[1].split('### Patient Call Insights');
-        doctorInsights = extractBullets(patientSplit[0]);
+        const contentLines = content
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.startsWith('-'))
+          .map(line => line.replace(/^-\s*/, '')) // Remove bullet prefix
+          .filter(line => line.length > 0);
 
-        if (patientSplit[1]) {
-          const followUpSplit = patientSplit[1].split('### Follow-up Appointment');
-          patientInsights = extractBullets(followUpSplit[0]);
-        }
+        sections.push({
+          title: headerText,
+          content: contentLines.length > 0 ? contentLines : [content || 'None specified'],
+        });
+        remainingContent = remainingContent.replace(header, '').replace(content, '');
+      });
+
+      // Handle any remaining content (e.g., "Summary content not available")
+      if (remainingContent.trim()) {
+        sections.push({
+          title: 'Encounter Summary',
+          content: [remainingContent.trim()],
+        });
       }
 
       return {
         date: dateMatch ? dateMatch[1].trim() : '',
         session: sessionMatch ? sessionMatch[1].trim() : '',
-        summary,
-        doctorInsights,
-        patientInsights,
+        sections,
       };
     });
-  };
-
-  const extractBullets = (text: string): string[] => {
-    return text
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.startsWith('-'))
-      .map(line => line.replace(/^-\s*/, ''));
   };
 
   const [patientData, setPatientData] = useState<PatientHistoryResponse | null>(null);
@@ -100,14 +108,22 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
     }
   }, [patientId]);
 
-  if (loading) return <div className="p-4">Loading patient history...</div>;
-  if (error) return <div className="p-4 text-red-500">{error}</div>;
+  // Spinner component
+  const Loader = () => (
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-50 bg-opacity-75 z-50">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+      <p className="mt-4 text-gray-600 text-lg">Loading patient history...</p>
+    </div>
+  );
+
+  if (loading) return <Loader />;
+  if (error) return <div className="p-4 text-red-500 bg-red-50 border border-red-200 rounded-lg">{error}. Please try again later.</div>;
   if (!patientData) return <div className="p-4">No patient data available</div>;
 
   return (
     <div className="patient-history p-4 border rounded-lg bg-white shadow-sm mt-4">
       <h3 className="text-lg font-semibold mb-3">Patient History</h3>
-      
+
       <div className="patient-info mb-4">
         <h4 className="font-medium text-gray-700">Patient Details</h4>
         <div className="grid grid-cols-2 gap-2 mt-2">
@@ -131,34 +147,16 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
                   Date: {new Date(session.date).toLocaleString()}
                 </div>
 
-                <div className="mt-2">
-                  <p className="font-medium">Summary:</p>
-                  <pre className="whitespace-pre-wrap bg-white p-2 border rounded mt-1">
-                    {session.summary}
-                  </pre>
-                </div>
-
-                {session.doctorInsights.length > 0 && (
-                  <div className="mt-3">
-                    <p className="font-medium">Doctor Call Insights:</p>
-                    <ul className="list-disc list-inside text-sm">
-                      {session.doctorInsights.map((insight, i) => (
-                        <li key={i}>{insight}</li>
+                {session.sections.map((section, idx) => (
+                  <div key={idx} className="mt-3">
+                    <p className="font-bold text-gray-900">{section.title}</p>
+                    <ul className="list-disc list-inside text-sm text-gray-700 mt-1">
+                      {section.content.map((item, i) => (
+                        <li key={i}>{item}</li>
                       ))}
                     </ul>
                   </div>
-                )}
-
-                {session.patientInsights.length > 0 && (
-                  <div className="mt-3">
-                    <p className="font-medium">Patient Call Insights:</p>
-                    <ul className="list-disc list-inside text-sm">
-                      {session.patientInsights.map((insight, i) => (
-                        <li key={i}>{insight}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                ))}
               </div>
             ))}
           </div>
@@ -166,27 +164,6 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
           <div className="mt-2 p-3 bg-gray-50 rounded">No medical history recorded</div>
         )}
       </div>
-
-      {/* <div className="visits-section">
-        <h4 className="font-medium text-gray-700">Previous Visits</h4>
-        {patientData.previous_visit_summaries && patientData.previous_visit_summaries.length > 0 ? (
-          <div className="mt-2 max-h-60 overflow-y-auto">
-            <ul className="space-y-2 pr-2">
-              {patientData.previous_visit_summaries.map((visit, index) => (
-                <li key={index} className="p-3 border rounded bg-gray-50">
-                  <div className="font-medium">Session #{visit.session_id}</div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Date: {new Date(visit.created_at).toLocaleDateString()} at {new Date(visit.created_at).toLocaleTimeString()}
-                  </div>
-                  <div className="text-sm mt-1">{visit.title}</div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <div className="mt-2 p-3 bg-gray-50 rounded">No previous visits recorded</div>
-        )}
-      </div> */}
 
       {patientData.last_updated && (
         <div className="text-sm text-gray-500 mt-3">
