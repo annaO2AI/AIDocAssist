@@ -167,7 +167,7 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
         )}
       </div>
 
-      <div className="visits-section">
+      {/* <div className="visits-section">
         <h4 className="font-medium text-gray-700">Previous Visits</h4>
         {patientData.previous_visit_summaries && patientData.previous_visit_summaries.length > 0 ? (
           <div className="mt-2 max-h-60 overflow-y-auto">
@@ -186,7 +186,7 @@ export default function PatientHistory({ patientId }: PatientHistoryProps) {
         ) : (
           <div className="mt-2 p-3 bg-gray-50 rounded">No previous visits recorded</div>
         )}
-      </div>
+      </div> */}
 
       {patientData.last_updated && (
         <div className="text-sm text-gray-500 mt-3">
