@@ -12,14 +12,14 @@ import Image from "next/image"
 
 interface TranscriptionInterfaceProps {
   sessionId: number
-  doctorId: number
+  // doctorId: number
   patientId: number
   setTranscriptionEnd: (summary: TranscriptionSummary) => void
 }
 
 const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
   sessionId,
-  doctorId,
+  // doctorId,
   patientId,
   setTranscriptionEnd,
 }) => {
