@@ -8,16 +8,18 @@ import {
 } from "@/app/chat-ui/components/icons"
 import { TranscriptionSummary } from "../types"
 import { APIService } from "../service/api"
-import Image from 'next/image';
+import Image from "next/image"
 
 interface TranscriptionInterfaceProps {
   sessionId: number
+  doctorId: number
   patientId: number
   setTranscriptionEnd: (summary: TranscriptionSummary) => void
 }
 
 const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
   sessionId,
+  doctorId,
   patientId,
   setTranscriptionEnd,
 }) => {
@@ -29,6 +31,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
     disconnect,
     startRecording,
     stopRecording,
+    safeDisconnect,
   } = useTranscriptionWebSocket({
     sessionId,
     doctorId: 0,
@@ -37,6 +40,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
 
   const [showStopConfirmation, setShowStopConfirmation] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [userInitiatedStop, setUserInitiatedStop] = useState(false) // Track if user initiated stop
   const transcriptEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -47,21 +51,37 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
     scrollToBottom()
   }, [transcription])
 
+  // Prevent automatic stopping of recording unless user initiated
+  useEffect(() => {
+    // If recording stops but user didn't initiate it, restart recording
+    if (!isRecording && !userInitiatedStop && !isProcessing && isConnected) {
+      // Add a small delay to prevent rapid restart loops
+      const timer = setTimeout(() => {
+        startRecording()
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [isRecording, userInitiatedStop, isProcessing, isConnected, startRecording])
+
   const handleStopRecording = () => {
+    setUserInitiatedStop(true) // Mark that user initiated the stop
     setShowStopConfirmation(true)
   }
 
   const confirmStopRecording = async () => {
     setIsProcessing(true)
-    stopRecording()
     
     try {
+      stopRecording()
+      
       const result = await APIService.endSession(sessionId)
       if (result) {
         setTranscriptionEnd(result)
+        safeDisconnect()
       }
     } catch (error) {
       console.error("Error ending session:", error)
+      setUserInitiatedStop(false)
     } finally {
       setIsProcessing(false)
       setShowStopConfirmation(false)
@@ -69,7 +89,13 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
   }
 
   const cancelStopRecording = () => {
+    setUserInitiatedStop(false)
     setShowStopConfirmation(false)
+  }
+
+  const handleStartRecording = () => {
+    setUserInitiatedStop(false) 
+    startRecording()
   }
 
   return (
@@ -88,12 +114,12 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
               </div>
             ) : (
               <div className="flex justify-center flex-col items-center p-10">
-                      <Image
-                        src="/stoprecording-conversation.svg"
-                        alt="stop recording"
-                        width={136.35}
-                        height={117.99}
-                      />
+                <Image
+                  src="/stoprecording-conversation.svg"
+                  alt="stop recording"
+                  width={136.35}
+                  height={117.99}
+                />
                 <h3 className="text-xl font-medium mb-0 mt-10">
                   Are you sure you want to stop the recording?
                 </h3>
@@ -103,7 +129,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={cancelStopRecording}
-                    className="px-4 py-2  hover:text-blue-800 bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg"
+                    className="px-4 py-2 hover:text-blue-800 bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg"
                     disabled={isProcessing}
                   >
                     Continue recording
@@ -122,31 +148,17 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
         </div>
       )}
 
-      <div  className={transcription.length === 0 ? 'mediNote-widthfix-warpper-center' : 'mediNote-widthfix-warpper'}>
+      <div
+        className={
+          transcription.length === 0
+            ? "mediNote-widthfix-warpper-center"
+            : "mediNote-widthfix-warpper"
+        }
+      >
         {/* Transcription Display */}
         <div className="mt-10">
           {transcription.length === 0 ? (
             <WelcomeMessage username={"Doctor"} />
-            // <div className="text-center py-12 text-gray-500">
-            //   <svg
-            //     className="w-16 h-16 mx-auto mb-4 text-gray-300"
-            //     fill="none"
-            //     stroke="currentColor"
-            //     viewBox="0 0 24 24"
-            //   >
-            //     <path
-            //       strokeLinecap="round"
-            //       strokeLinejoin="round"
-            //       strokeWidth={1.5}
-            //       d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012 2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-            //     />
-            //   </svg>
-            //   <p>
-            //     {isConnected
-            //       ? "No transcription yet. Start recording to begin."
-            //       : "Connect to begin transcription."}
-            //   </p>
-            // </div>
           ) : (
             <div className="space-y-4 overflow-y-auto p-2 transcriptDoctorPatient">
               {transcription.map((msg: any, index: number) => (
@@ -179,31 +191,10 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
                               UN
                             </div>
                           )}
-                          {/* <span
-                            className={`font-semibold text-sm px-2 py-1 rounded-full ${
-                              msg.speaker === "Doctor"
-                                ? "bg-blue-100 text-blue-700"
-                                : msg.speaker === "Patient"
-                                ? "bg-green-100 text-green-700"
-                                : msg.speaker === "Unknown"
-                                ? "bg-gray-100 text-gray-700"
-                                : "bg-gray-100 text-gray-700"
-                            }`}
-                          >
-                            {msg.speaker === "Doctor" && <span>Dr</span>}
-                            {msg.speaker === "Patient" && <span>Pa</span>}
-                            {msg.speaker === "Unknown" && <span>Un</span>}
-                            {msg.speaker || "System"}
-                          </span> */}
                         </div>
                       </div>
                       <p className="text-gray-800 leading-relaxed">
                         {msg.text || msg.msg}
-                         {/* {msg.t0 && msg.t1 && (
-                          <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {(msg.t1 - msg.t0).toFixed(1)}s
-                          </span>
-                        )} */}
                       </p>
                     </div>
                   </div>
@@ -225,11 +216,12 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
             </span>
           </div>
         </div>
+
         {/* Controls */}
         <div className="flex flex-wrap gap-3 mb-6 justify-between controle-search-AIDocAssist h-[90px]">
           <div className="flex items-center">
             <button
-              onClick={isRecording ? handleStopRecording : startRecording}
+              onClick={isRecording ? handleStopRecording : handleStartRecording}
               disabled={!isConnected || isProcessing}
             >
               {isRecording ? (
@@ -251,7 +243,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
 
           <div className="flex gap-2 items-center">
             <button
-              onClick={isRecording ? handleStopRecording : startRecording}
+              onClick={isRecording ? handleStopRecording : handleStartRecording}
               disabled={!isConnected || isProcessing}
               className={`rounded-md font-medium h-[44px] ${
                 isRecording

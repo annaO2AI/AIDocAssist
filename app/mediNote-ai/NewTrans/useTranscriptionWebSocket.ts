@@ -37,6 +37,7 @@ export const useTranscriptionWebSocket = ({
   const [transcription, setTranscription] = useState<TranscriptionMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('Disconnected');
+  const [keepAliveInterval, setKeepAliveInterval] = useState<NodeJS.Timeout | null>(null);
 
   const getWebSocketUrl = useCallback((url: string) => {
     return url.replace(/^https/, 'wss');
@@ -113,6 +114,14 @@ export const useTranscriptionWebSocket = ({
         setIsConnected(true);
         setStatus('Connected');
         setError(null);
+        if (keepAliveInterval === null) {
+          const interval = setInterval(() => {
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              sendControlMessage('heartbeat', { timestamp: Date.now() });
+            }
+          }, 30000);
+          setKeepAliveInterval(interval);
+        }
       };
 
       wsRef.current.onmessage = (event) => {
@@ -144,8 +153,11 @@ export const useTranscriptionWebSocket = ({
         console.log('WebSocket closed:', event.code, event.reason);
         setIsConnected(false);
         setStatus('Disconnected');
-        
-        if (event.code !== 1000) {
+        if (keepAliveInterval) {
+          clearInterval(keepAliveInterval);
+          setKeepAliveInterval(null);
+        }
+        if (event.code !== 1000 && event.code !== 1001) {
           setError(`Connection closed: ${event.reason || 'Unknown reason'}`);
         }
       };
@@ -159,7 +171,7 @@ export const useTranscriptionWebSocket = ({
       console.error('Failed to create WebSocket:', err);
       setError('Failed to create WebSocket connection');
     }
-  }, [sessionId, doctorId, patientId, baseUrl, getWebSocketUrl]);
+  }, [sessionId, doctorId, patientId, baseUrl, getWebSocketUrl, keepAliveInterval]);
 
   const disconnect = useCallback(() => {
     stopRecording();
@@ -170,6 +182,7 @@ export const useTranscriptionWebSocket = ({
     }
     
     setIsConnected(false);
+    setIsRecording(false);
     setStatus('Disconnected');
   }, []);
 
@@ -228,15 +241,19 @@ export const useTranscriptionWebSocket = ({
 
     if (!isConnected) {
       await connect();
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     const audioInitialized = await initAudio();
-    if (audioInitialized) {
-      setIsRecording(true);
-      setStatus('Recording');
-      console.log('Recording started');
+    if (!audioInitialized) {
+      setError('Audio setup failed (check microphone permissions). Reconnecting...');
+      disconnect();
+      return;
     }
-  }, [isRecording, isConnected, connect, initAudio]);
+    setIsRecording(true);
+    setStatus('Recording');
+    console.log('Recording started');
+  }, [isRecording, isConnected, connect, initAudio, disconnect]);
 
   const stopRecording = useCallback(() => {
     if (workletNodeRef.current) {
@@ -269,6 +286,19 @@ export const useTranscriptionWebSocket = ({
     setTranscription([]);
   }, []);
 
+  const safeDisconnect = useCallback(() => {
+    if (keepAliveInterval) {
+      clearInterval(keepAliveInterval);
+      setKeepAliveInterval(null);
+    }
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'Session ended successfully');
+      wsRef.current = null;
+    }
+    setIsConnected(false);
+    setStatus('Disconnected');
+  }, [keepAliveInterval]);
+
   useEffect(() => {
     if (autoConnect && sessionId) {
       connect();
@@ -278,6 +308,13 @@ export const useTranscriptionWebSocket = ({
       disconnect();
     };
   }, [sessionId, autoConnect, connect, disconnect]);
+
+  
+    useEffect(() => {
+  if (!isConnected && isRecording) {
+    setIsRecording(false);
+  }
+}, [isConnected])
 
   return {
     isConnected,
@@ -291,6 +328,7 @@ export const useTranscriptionWebSocket = ({
     stopRecording,
     sendControlMessage,
     clearTranscription,
-    hasTranscription: transcription.length > 0
+    hasTranscription: transcription.length > 0,
+    safeDisconnect
   };
 };
