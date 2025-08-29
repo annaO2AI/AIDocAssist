@@ -314,29 +314,6 @@ export default function SummaryGeneration({
               Patient-{patientName.replace("#", "")}.mp3
             </h1>
           </div>
-          <button
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
-            onClick={() => {
-              setIsEdit(!isEdit)
-              if (!isEdit) {
-                setEditedSummary(summaryContent)
-              } else {
-                handleSaveEditedSummary()
-              }
-            }}
-          >
-            {isEdit ? (
-              <>
-                <Save className="w-4 h-4" />
-                <span className="text-sm">Save</span>
-              </>
-            ) : (
-              <>
-                <Edit className="w-4 h-4" />
-                <span className="text-sm">Edit</span>
-              </>
-            )}
-          </button>
         </div>
         <Image
            src="/audio-clip-illustrations.svg"
@@ -458,16 +435,40 @@ export default function SummaryGeneration({
     {/* Action Buttons */}
       <div className="flex justify-center space-x-3 mt-8 mb-8">
         <button
-          className="px-6 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-          onClick={handleSaveSummary}
-        >
-          Save Draft
-        </button>
-        <button
           className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           onClick={handleApproveSummary}
         >
-          <span>Submit</span>
+          <span>Looks Good Submit</span>
+        </button>
+
+       <button
+            className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 "
+            onClick={() => {
+              setIsEdit(!isEdit)
+              if (!isEdit) {
+                setEditedSummary(summaryContent)
+              } else {
+                handleSaveEditedSummary()
+              }
+            }}
+          >
+            {isEdit ? (
+              <>
+                <Save className="w-4 h-4" />
+                <span className="text-sm">Save</span>
+              </>
+            ) : (
+              <>
+                <Edit className="w-4 h-4" />
+                <span className="text-sm">Edit</span>
+              </>
+            )}
+          </button>
+          <button
+          className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          onClick={handleSaveSummary}
+        >
+          Save For Later
         </button>
       </div>
     </>
