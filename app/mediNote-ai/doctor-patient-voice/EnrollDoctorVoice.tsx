@@ -32,7 +32,7 @@ export default function EnrollDoctorVoice() {
       const audioFile = new File([audioBlob], `55.wav`, {
         type: 'audio/wav',
       });
-      const response = await APIService.enrollDoctorVoice(audioFile);
+      const response = await APIService.enrollDoctorVoice(55, audioFile);
       if (response) {
         // Handle success if needed
       }
