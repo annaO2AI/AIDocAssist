@@ -189,3 +189,35 @@ export interface TranscriptionSummary {
   summary_status: string;
   summary_id: number;
 }
+
+
+// Doctor related types
+export interface doctor {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  voice_enrolled: boolean;
+}
+
+export interface DoctorCreationTypes {
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+// API Response types
+export interface CreateDoctorResponse {
+  id: number;
+  message: string;
+  doctor: doctor;
+}
+
+export interface SearchDoctorsResponse {
+  results: doctor[];
+}
+
+export interface UpdateDoctorResponse {
+  message: string;
+  doctor_id: number;
+}

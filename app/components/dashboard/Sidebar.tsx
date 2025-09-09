@@ -1,18 +1,17 @@
+import { HomeIcon, BarChart2Icon, SettingsIcon } from "lucide-react"
+import clsx from "clsx"
+import { useState } from "react"
 import {
-  HomeIcon,
-  BarChart2Icon,
-  SettingsIcon,
-} from "lucide-react";
-import clsx from "clsx";
-import { useState } from "react";
-import { Rightarrow, Leftarrow, HrIcon, ArroTabIcon, LegalSearchIcon, AiIcon, AiOps, AIDocAssist } from "../../chat-ui/components/icons";
+  Rightarrow,
+  Leftarrow,
+  HrIcon,
+  ArroTabIcon,
+  LegalSearchIcon,
+  AiIcon,
+  AiOps,
+  AIDocAssist,
+} from "../../chat-ui/components/icons"
 
-// Define navigation items (unused, kept for reference)
-const navItems = [
-  { label: "Home", icon: HomeIcon, href: "#" },
-  { label: "Reports", icon: BarChart2Icon, href: "#" },
-  { label: "Settings", icon: SettingsIcon, href: "#" },
-];
 
 // Define menu items for dropdowns
 const menuItems = [
@@ -21,21 +20,42 @@ const menuItems = [
     label: "AIDocAssist",
     icon: AiIcon,
     subItems: [
-      { label: "Patient Registration", href: "/mediNote-ai/patient-registration", icon: ArroTabIcon },
-      { label: "Patient Details", href: "/mediNote-ai/patient-details", icon: ArroTabIcon },
-      { label: "Doctor & Patient Voice", href: "/mediNote-ai/doctor-patient-voice", icon: ArroTabIcon },
-      // { label: "AI Summary", href: "/mediNote-ai/transcription-summary", icon: ArroTabIcon },
+      {
+        label: "Patient Registration",
+        href: "/mediNote-ai/patient-registration",
+        icon: ArroTabIcon,
+      },
+      {
+        label: "Patient Details",
+        href: "/mediNote-ai/patient-details",
+        icon: ArroTabIcon,
+      },
+      {
+        label: "Doctor Registration",
+        href: "/mediNote-ai/doctor-registration",
+        icon: ArroTabIcon,
+      },
+      {
+        label: "Doctor Details",
+        href: "/mediNote-ai/doctor-details",
+        icon: ArroTabIcon,
+      },
 
+      {
+        label: "Doctor & Patient Voice",
+        href: "/mediNote-ai/doctor-patient-voice",
+        icon: ArroTabIcon,
+      },
     ],
   },
-];
+]
 
 type SidebarProps = {
-  collapsed: boolean;
-  hovered: boolean;
-  toggleSidebar: () => void;
-  setHovered: (hovered: boolean) => void;
-};
+  collapsed: boolean
+  hovered: boolean
+  toggleSidebar: () => void
+  setHovered: (hovered: boolean) => void
+}
 
 export default function Sidebar({
   collapsed,
@@ -43,20 +63,20 @@ export default function Sidebar({
   toggleSidebar,
   setHovered,
 }: SidebarProps) {
-  const isExpanded = !collapsed;
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const isExpanded = !collapsed
+  const [openMenu, setOpenMenu] = useState<string | null>(null)
 
   const toggleMenu = (menuId: string) => {
-    setOpenMenu(openMenu === menuId ? null : menuId);
+    setOpenMenu(openMenu === menuId ? null : menuId)
     // No toggleSidebar call here to prevent collapsing on main menu click
-  };
+  }
 
   const handleSubItemClick = () => {
     // Collapse sidebar only if it's expanded
     if (isExpanded) {
-      toggleSidebar();
+      toggleSidebar()
     }
-  };
+  }
 
   return (
     <aside
@@ -84,7 +104,8 @@ export default function Sidebar({
               <div className="flex items-center text-left gap-3">
                 {isExpanded ? (
                   <>
-                    <menu.icon width={20} className="min-w-[20px]" /> {menu.label}
+                    <menu.icon width={20} className="min-w-[20px]" />{" "}
+                    {menu.label}
                   </>
                 ) : (
                   <menu.icon width={20} className="min-w-[20px]" />
@@ -111,7 +132,7 @@ export default function Sidebar({
             <div
               className={clsx(
                 "overflow-hidden transition-all duration-300",
-                openMenu === menu.id ? "max-h-60" : "max-h-0"
+                openMenu === menu.id ? "max-h-72" : "max-h-0"
               )}
             >
               {menu.subItems.map((subItem) => (
@@ -123,7 +144,8 @@ export default function Sidebar({
                 >
                   {isExpanded ? (
                     <>
-                      <subItem.icon width={20} className="min-w-[20px]" /> {subItem.label}
+                      <subItem.icon width={20} className="min-w-[20px]" />{" "}
+                      {subItem.label}
                     </>
                   ) : (
                     <subItem.icon width={20} className="min-w-[20px]" />
@@ -149,5 +171,5 @@ export default function Sidebar({
         </a> */}
       </div>
     </aside>
-  );
+  )
 }

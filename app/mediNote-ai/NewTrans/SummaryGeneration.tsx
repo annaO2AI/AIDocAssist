@@ -62,7 +62,7 @@ export default function SummaryGeneration({
   }
 
   const fetchSummaryById = useCallback(async () => {
-    if (!sessionId){
+    if (!sessionId) {
       setIsLoading(false)
       return
     }
@@ -85,7 +85,6 @@ export default function SummaryGeneration({
   const parseContentSections = (content: string) => {
     if (!content) return []
     
-    // Split content by headers (# or ##)
     const sections = content.split(/(?=^#+ )/m).filter(section => section.trim())
     
     return sections.map(section => {
@@ -93,7 +92,6 @@ export default function SummaryGeneration({
       const headerLine = lines[0]
       const contentLines = lines.slice(1)
       
-      // Extract header text and level
       const headerMatch = headerLine.match(/^(#+)\s*(.+)/)
       if (!headerMatch) return null
       
@@ -168,7 +166,7 @@ export default function SummaryGeneration({
       return str
         .replace(/[*#]+/g, "")
         .replace(/^-\s*/, "")
-        .replace(/^\w+\s*-\s*/, "") // Remove prefixes like "Treatment:" or "Instructions:"
+        .replace(/^\w+\s*-\s*/, "")
         .trim()
     }
     
@@ -214,7 +212,6 @@ export default function SummaryGeneration({
       
       const { level, title, content: sectionContent } = section
       
-      // Parse bullet points and format them
       const formatContent = (text: string) => {
         const lines = text.split('\n').filter(line => line.trim())
         
@@ -222,7 +219,6 @@ export default function SummaryGeneration({
           const trimmed = line.trim()
           if (!trimmed) return null
           
-          // Handle bullet points
           if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
             const bulletText = trimmed.replace(/^[-•]\s*/, '').trim()
             return (
@@ -232,7 +228,6 @@ export default function SummaryGeneration({
             )
           }
           
-          // Handle regular text
           return (
             <p key={lineIndex} className="text-gray-700 text-sm leading-relaxed mb-2">
               {trimmed}
@@ -279,61 +274,84 @@ export default function SummaryGeneration({
   const followupNote = summaryId?.summary?.ui?.followup?.note?.replace(/\*\*/g, "") ?? ""
   const followupDate = summaryId?.summary?.ui?.followup?.date ?? "To be scheduled"
 
-  console.log(summaryContent, "summaryContent")
-
   const Loader = () => (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75 z-50">
       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
     </div>
   )
-  
+
   return (
     <>
-      {isLoading && <Loader />} 
-      <div className={`summaryGeneration-widthfix w-full mx-auto p-6 bg-gray-50 min-h-screen mt-12 border-o3 rounded-lg ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
-      {/* Notification */}
-      {notification.show && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className="flex items-center bg-green-500 text-white text-sm font-bold px-4 py-3 rounded-md shadow-lg">
-            <CheckCircle className="h-5 w-5 mr-2" />
-            {notification.message}
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="bg-white rounded-lg p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center">
-              <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M5 8.8421C6.18575 8.8421 7.14283 7.85471 7.14283 6.6316V2.21053C7.14283 0.987368 6.18575 0 5 0C3.81425 0 2.85714 0.987368 2.85714 2.21053V6.6316C2.85714 7.85471 3.81425 8.8421 5 8.8421ZM4.28575 2.21053C4.28575 1.80527 4.60717 1.47369 5 1.47369C5.39283 1.47369 5.71425 1.80527 5.71425 2.21053V6.6316C5.71425 7.04423 5.4 7.3684 5 7.3684C4.60717 7.3684 4.28575 7.03684 4.28575 6.6316V2.21053ZM8.78575 6.6316H10C10 9.14418 8.05717 11.2221 5.71425 11.5832V14H4.28575V11.5832C1.94286 11.2221 0 9.14418 0 6.6316H1.21428C1.21428 8.8421 3.02858 10.3895 5 10.3895C6.97142 10.3895 8.78575 8.8421 8.78575 6.6316Z" fill="#34334B"/>
-              </svg>
+      {isLoading && <Loader />}
+      <div className={`w-full mx-auto p-6 bg-gray-50 min-h-screen rounded-lg ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+        {/* Notification */}
+        {notification.show && (
+          <div className="fixed top-4 right-4 z-50">
+            <div className="flex items-center bg-green-500 text-white text-sm font-bold px-4 py-3 rounded-md shadow-lg">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              {notification.message}
             </div>
-            <h1 className="text-xl font-semibold text-gray-900">
-              Patient-{patientName.replace("#", "")}.mp3
-            </h1>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="bg-white rounded-lg p-6 mb-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center">
+                <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M5 8.8421C6.18575 8.8421 7.14283 7.85471 7.14283 6.6316V2.21053C7.14283 0.987368 6.18575 0 5 0C3.81425 0 2.85714 0.987368 2.85714 2.21053V6.6316C2.85714 7.85471 3.81425 8.8421 5 8.8421ZM4.28575 2.21053C4.28575 1.80527 4.60717 1.47369 5 1.47369C5.39283 1.47369 5.71425 1.80527 5.71425 2.21053V6.6316C5.71425 7.04423 5.4 7.3684 5 7.3684C4.60717 7.3684 4.28575 7.03684 4.28575 6.6316V2.21053ZM8.78575 6.6316H10C10 9.14418 8.05717 11.2221 5.71425 11.5832V14H4.28575V11.5832C1.94286 11.2221 0 9.14418 0 6.6316H1.21428C1.21428 8.8421 3.02858 10.3895 5 10.3895C6.97142 10.3895 8.78575 8.8421 8.78575 6.6316Z" fill="#34334B"/>
+                </svg>
+              </div>
+              <h1 className="text-xl font-semibold text-gray-900">
+                Patient-{patientName.replace("#", "")}.mp3
+              </h1>
+            </div>
+          </div>
+          <Image
+            src="/audio-clip-illustrations.svg"
+            alt="Audio Clip Illustration"
+            width={449}
+            height={42}
+          />
+        </div>
+
+        {/* Chips Section */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Patient Information</h2>
+          <div className="flex flex-wrap gap-3">
+            {[
+              { label: "Patient", value: patientName },
+              { label: "Symptoms", value: symptoms },
+              { label: "Duration", value: durationText },
+              { label: "Family History", value: familyHistory },
+              { label: "Next Steps", value: nextSteps },
+            ].map((chip, index) => (
+              <div
+                key={index}
+                className="flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+              >
+                <span className="font-medium mr-1">{chip.label}:</span>
+                <span>{chip.value || "Not specified"}</span>
+              </div>
+            ))}
           </div>
         </div>
-        <Image
-           src="/audio-clip-illustrations.svg"
-           alt="Customer Illustration"
-           width={449}
-           height={42}
-          />
-      </div>
 
-      {/* Summary Section */} 
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-o3">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Summary</h2>
-        <div className="flex justify-between items-center">
-           <div className="w-full">
-            {isEdit ? (
-            <textarea
-              className="w-full h-96 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              value={editedSummary}
-              onChange={(e) => setEditedSummary(e.target.value)}
-            />
+        {/* Summary Section */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
+          </div>
+          <div className="flex justify-between items-start">
+            <div className="w-full pr-4">
+              {isEdit ? (
+                <textarea
+                  className="w-full h-96 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none"
+                  value={editedSummary}
+                  onChange={(e) => setEditedSummary(e.target.value)}
+                  placeholder="Edit the summary here..."
+                />
               ) : (
                 <div className="text-gray-700 text-sm leading-relaxed">
                   {summaryContent === "Summary content not available." ? (
@@ -344,105 +362,106 @@ export default function SummaryGeneration({
                 </div>
               )}
             </div>
-            <div className="w-[400px] flex  items-center">
+            <div className="w-[300px] flex items-center justify-center">
               <Image
                 src="/summary-docter-petiont.svg"
-                alt="Customer Illustration"
+                alt="Doctor-Patient Illustration"
                 width={250}
                 height={170}
               />
-             </div>
-         </div>
-      </div>
-
-      {/* Insights & Follow-up Section */}
-      <div className="grid md:grid-cols-2 gap-6 mb-6">
-        {/* Doctor Call Insights */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border-o3">
-          <div className="flex items-start space-x-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900 mb-1">Doctor Call Insights</h3>
-              <p className="text-sm text-gray-600 mb-3">{doctorName}</p>
-              {Object.entries(structuredInsights).map(
-                ([section, items]) =>
-                  items.length > 0 && (
-                    <div key={section} className="mb-4">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">{section}</h4>
-                      <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-                        {items.map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )
-              )}
-              {doctorBullets.length === 0 && (
-                <p className="text-sm text-gray-500">No doctor insights available.</p>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Patient Call Insights */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border-o3">
-          <div className="flex items-start space-x-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-blue-600" />
+        {/* Insights & Follow-up Section */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          {/* Doctor Call Insights */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <Stethoscope className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-900 mb-1">Doctor Call Insights</h3>
+                <p className="text-sm text-gray-600 mb-3">{doctorName}</p>
+                {Object.entries(structuredInsights).map(
+                  ([section, items]) =>
+                    items.length > 0 && (
+                      <div key={section} className="mb-4">
+                        <h4 className="text-sm font-semibold text-gray-800 mb-1">{section}</h4>
+                        <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                          {items.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                )}
+                {doctorBullets.length === 0 && (
+                  <p className="text-sm text-gray-500">No doctor insights available.</p>
+                )}
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900 mb-1">Patient Call Insights</h3>
-              <p className="text-sm text-gray-600 mb-3">{patientName}</p>
-              {processedPatientInsights.length > 0 ? (
-                <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-                  {processedPatientInsights.map((insight, idx) => (
-                    <li key={idx}>{insight}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500">No patient insights available.</p>
-              )}
+          </div>
+
+          {/* Patient Call Insights */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-900 mb-1">Patient Call Insights</h3>
+                <p className="text-sm text-gray-600 mb-3">{patientName}</p>
+                {processedPatientInsights.length > 0 ? (
+                  <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                    {processedPatientInsights.map((insight, idx) => (
+                      <li key={idx}>{insight}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500">No patient insights available.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Follow-up Appointment */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 custom-gradient">
-        <div className="flex items-start space-x-3">
-          <div className="w-10 h-10  rounded-lg flex items-center justify-center">
-             <Image
+        {/* Follow-up Appointment */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-start space-x-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+              <Image
                 src="/follow-up-appointment.svg"
-                alt="follow-up"
+                alt="Follow-up Illustration"
                 width={40}
                 height={40}
               />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-medium text-gray-900 mb-1">Follow-up Appointment</h3>
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Note:</span> {followupNote}
-            </p>
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Date:</span> {followupDate}
-            </p>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900 mb-1">Follow-up Appointment</h3>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Note:</span> {followupNote || "No follow-up actions specified"}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Date:</span> {followupDate}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    {/* Action Buttons */}
-      <div className="flex justify-center space-x-3 mt-8 mb-8">
-        <button
-          className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          onClick={handleApproveSummary}
-        >
-          <span>Looks Good Submit</span>
-        </button>
 
-       <button
-            className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 "
+        {/* Action Buttons */}
+        <div className="flex justify-center space-x-4 mt-8 mb-8">
+          <button
+            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            onClick={handleApproveSummary}
+            disabled={isLoading}
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            <span>Approve Summary</span>
+          </button>
+          <button
+            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             onClick={() => {
               setIsEdit(!isEdit)
               if (!isEdit) {
@@ -451,25 +470,29 @@ export default function SummaryGeneration({
                 handleSaveEditedSummary()
               }
             }}
+            disabled={isLoading}
           >
             {isEdit ? (
               <>
-                <Save className="w-4 h-4" />
-                <span className="text-sm">Save</span>
+                <Save className="w-4 h-4 mr-2" />
+                <span>Save Changes</span>
               </>
             ) : (
               <>
-                <Edit className="w-4 h-4" />
-                <span className="text-sm">Edit</span>
+                <Edit className="w-4 h-4 mr-2" />
+                <span>Edit Summary</span>
               </>
             )}
           </button>
           <button
-          className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          onClick={handleSaveSummary}
-        >
-          Save For Later
-        </button>
+            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            onClick={handleSaveSummary}
+            disabled={isLoading}
+          >
+            <Save className="w-4 h-4 mr-2" />
+            <span>Save for Later</span>
+          </button>
+        </div>
       </div>
     </>
   )

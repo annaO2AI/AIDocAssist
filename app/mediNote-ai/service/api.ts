@@ -1,4 +1,4 @@
-import { HealthResponse, patient, PatientCreationTypes, startConversationPayload } from "../types";
+import { CreateDoctorResponse, DoctorCreationTypes, HealthResponse, patient, PatientCreationTypes, SearchDoctorsResponse, startConversationPayload, UpdateDoctorResponse } from "../types";
 import { API_BASE_URL_AISEARCH_MediNote, API_ROUTES } from "../../constants/api";
 import { promises } from "dns";
 const API_SERVICE = "https://doctorassistantai-athshnh6fggrbhby.centralus-01.azurewebsites.net"
@@ -91,6 +91,74 @@ catch (error) {
     console.error('Registration error:', error);
   }
 }
+
+ // Search for doctors
+  static async SearchDoctor(query: string): Promise<SearchDoctorsResponse> {
+    try {
+      const response = await fetch(`${API_SERVICE}/doctors/search?q=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error searching doctors:', error);
+      throw error;
+    }
+  }
+
+  // Update doctor information
+  static async updateDoctor(doctorData: DoctorCreationTypes, doctorId: number): Promise<UpdateDoctorResponse> {
+    try {
+      const response = await fetch(`${API_SERVICE}/doctors/update/${doctorId}`, {
+        method: 'PUT',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(doctorData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating doctor:', error);
+      throw error;
+    }
+  }
+
+
+
+  static async createDoctor(doctorData: DoctorCreationTypes): Promise<CreateDoctorResponse> {
+    try {
+      const response = await fetch(`${API_SERVICE}/doctors/create`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(doctorData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating doctor:', error);
+      throw error;
+    }
+  }
 
 
 static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
@@ -189,7 +257,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
   }
 
 
-  static async enrollDoctorVoice(audioFile: File): Promise<any> {
+  static async enrollDoctorVoice(id: number, audioFile: File): Promise<any> {
     try {
       const formData = new FormData();
       formData.append('file', audioFile);

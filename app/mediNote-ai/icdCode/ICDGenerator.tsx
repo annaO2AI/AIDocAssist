@@ -217,69 +217,7 @@ const ICDGenerator: React.FC<ICDGeneratorProps> = ({ sessionId }) => {
           </div>
         )}
       </div>
-
-      {/* Summary Form (Shown only after successful search) */}
-      {icdCodes.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Generate ICD Summary</h3>
-          {/* Summary Text Input */}
-          <div>
-            <label htmlFor="summaryText" className="block text-sm font-medium text-gray-700">
-              Summary Text
-            </label>
-            <textarea
-              id="summaryText"
-              value={summaryText}
-              onChange={(e) => setSummaryText(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., Cholera due to Vibrio cholerae O1, biovar cholerae"
-              rows={4}
-            />
-          </div>
-
-          {/* Summary System Dropdown */}
-          <div>
-            <label htmlFor="summarySystem" className="block text-sm font-medium text-gray-700">
-              ICD System
-            </label>
-            <select
-              id="summarySystem"
-              value={summarySystem}
-              onChange={(e) => setSummarySystem(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="" disabled>
-                Select a system
-              </option>
-              <option value="ICD10">ICD10</option>
-              <option value="ICD11">ICD11</option>
-            </select>
-          </div>
-
-          {/* Generate Summary Button */}
-          <button
-            onClick={handleGenerateSummary}
-            disabled={summaryLoading}
-            className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 disabled:bg-green-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            {summaryLoading ? 'Generating...' : 'Generate ICD Summary'}
-          </button>
-
-          {/* Summary Results */}
-          {summaryError && <p className="mt-4 text-red-500">{summaryError}</p>}
-          {summaryResponse && (
-            <div className="mt-4">
-              <h4 className="text-md font-semibold">Summary Result</h4>
-              <div className=" p-4">
-                <p><strong>Summary ID:</strong> {summaryResponse.summary_id}</p>
-                <p><strong>Session ID:</strong> {summaryResponse.session_id}</p>
-                <p><strong>Summary Text:</strong> {summaryResponse.summary_text}</p>
-                <p><strong>ICD System:</strong> {summaryResponse.icd_system}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+    
     </div>
   );
 };
