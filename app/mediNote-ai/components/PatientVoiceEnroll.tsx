@@ -9,6 +9,82 @@ interface ModalProps {
   id: number
 }
 
+// Function to convert audio blob to WAV format
+const convertToWav = async (audioBlob: Blob): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const fileReader = new FileReader()
+
+    fileReader.onload = async (e) => {
+      try {
+        const arrayBuffer = e.target?.result as ArrayBuffer
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+        
+        // Convert to WAV
+        const wavBuffer = audioBufferToWav(audioBuffer)
+        const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' })
+        
+        resolve(wavBlob)
+      } catch (error) {
+        reject(error)
+      }
+    }
+
+    fileReader.onerror = () => reject(new Error('Failed to read audio file'))
+    fileReader.readAsArrayBuffer(audioBlob)
+  })
+}
+
+// Function to convert AudioBuffer to WAV format
+const audioBufferToWav = (buffer: AudioBuffer): ArrayBuffer => {
+  const length = buffer.length
+  const numberOfChannels = buffer.numberOfChannels
+  const sampleRate = buffer.sampleRate
+  const bytesPerSample = 2 // 16-bit
+  const blockAlign = numberOfChannels * bytesPerSample
+  const byteRate = sampleRate * blockAlign
+  const dataSize = length * blockAlign
+  const bufferSize = 44 + dataSize
+
+  const arrayBuffer = new ArrayBuffer(bufferSize)
+  const view = new DataView(arrayBuffer)
+
+  // WAV header
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i))
+    }
+  }
+
+  writeString(0, 'RIFF') 
+  view.setUint32(4, bufferSize - 8, true) 
+  writeString(8, 'WAVE')
+  writeString(12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, numberOfChannels, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, byteRate, true)
+  view.setUint16(32, blockAlign, true)
+  view.setUint16(34, 16, true)
+  writeString(36, 'data')
+  view.setUint32(40, dataSize, true) 
+
+  // Convert audio buffer to PCM
+  let offset = 44
+  for (let channel = 0; channel < numberOfChannels; channel++) {
+    const channelData = buffer.getChannelData(channel)
+    for (let i = 0; i < length; i++) {
+      const sample = Math.max(-1, Math.min(1, channelData[i]))
+      const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF
+      view.setInt16(offset, intSample, true)
+      offset += 2
+    }
+  }
+
+  return arrayBuffer
+}
+
 export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
   const {
     isRecording,
@@ -35,12 +111,15 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
       setError("Failed to capture audio")
       return
     }
+    
     setIsLoading(true)
     try {
-      // Change file name and type to .wav
-      const audioFile = new File([audioBlob], `${id}.wav`, {
+      // Convert audio blob to proper WAV format
+      const wavBlob = await convertToWav(audioBlob)
+      const audioFile = new File([wavBlob], `${id}.wav`, {
         type: "audio/wav",
       })
+      
       const response = await APIService.enrollPatientVoice(id, audioFile)
       if (response) {
         setShowSuccessPopup(true)
