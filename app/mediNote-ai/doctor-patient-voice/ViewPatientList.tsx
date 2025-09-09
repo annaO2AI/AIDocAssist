@@ -14,7 +14,7 @@ interface ViewPatientListProps {
 
 const ViewPatientList = ({ patients, handleStartCon }: ViewPatientListProps) => {
   return (
-    <div className="patient-list space-y-4">
+    <div className="grid grid-cols-3 gap-4 patient-list space-y-4">
       {patients.map((patient) => {
         const handlePlayAudio = () => {
           const audio = new Audio(patient.voice_file);

@@ -148,7 +148,7 @@ export default function CheckPatientVoice({
 
       <div>
         <div className="flex flex-col gap-3">
-          <div className="w-3/5">
+          <div className="w-full">
             {loading && (
               <div className="p-4 text-center text-gray-500">
                 Searching for patient...

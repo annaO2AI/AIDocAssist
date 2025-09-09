@@ -161,45 +161,47 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
             <WelcomeMessage username={"Doctor"} />
           ) : (
             <div className="space-y-4 overflow-y-auto p-2 transcriptDoctorPatient">
-              {transcription.map((msg: any, index: number) => (
-                <div
-                  key={index}
-                  className={`p-2 rounded-xl border-l-4 transition-all duration-200 hover:shadow-md ${
-                    msg.type === "turn-final"
-                      ? "bg-white border-blue-400 hover:bg-white"
-                      : msg.type === "error"
-                      ? "bg-red-50 border-red-400 hover:bg-red-100"
-                      : "bg-blue-50 border-blue-400 hover:bg-blue-100"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-3 items-center">
-                      <div className="flex items-center">
-                        <div className="flex items-center space-x-2">
-                          {msg.speaker === "Doctor" && (
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-normal">
-                              DR
-                            </div>
-                          )}
-                          {msg.speaker === "Patient" && (
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600 text-white text-sm font-normal">
-                              PA
-                            </div>
-                          )}
-                          {msg.speaker === "Unknown" && (
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-600 text-white text-sm font-normal">
-                              UN
-                            </div>
-                          )}
+              {transcription.map((msg: any, index: number) => {
+                if (msg.text === "Thank you.") return null; // Hide "Thank you."
+                return (
+                  <div
+                    key={index}
+                    className={`p-2 rounded-xl border-l-4 transition-all duration-200 hover:shadow-md ${msg.type === "turn-final"
+                        ? "bg-white border-blue-400 hover:bg-white"
+                        : msg.type === "error"
+                          ? "bg-red-50 border-red-400 hover:bg-red-100"
+                          : "bg-blue-50 border-blue-400 hover:bg-blue-100"
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-3 items-center">
+                        <div className="flex items-center">
+                          <div className="flex items-center space-x-2">
+                            {msg.speaker === "Doctor" && (
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-normal">
+                                DR
+                              </div>
+                            )}
+                            {msg.speaker === "Patient" && (
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600 text-white text-sm font-normal">
+                                PA
+                              </div>
+                            )}
+                            {msg.speaker === "Unknown" && (
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-600 text-white text-sm font-normal">
+                                UN
+                              </div>
+                            )}
+                          </div>
                         </div>
+                        <p className="text-gray-800 leading-relaxed">
+                          {msg.text || msg.msg}
+                        </p>
                       </div>
-                      <p className="text-gray-800 leading-relaxed">
-                        {msg.text || msg.msg}
-                      </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={transcriptEndRef} />
             </div>
           )}
