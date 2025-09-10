@@ -3,6 +3,7 @@ import DoctorCard from "../components/DoctorCard";
 import { APIService } from "../service/api";
 import { UpdateDoctorModal } from "../components/UpdateDoctorModal";
 import { DoctorVoiceEnroll } from "../components/DoctorVoiceEnroll";
+import Image from 'next/image';
 
 interface ApiResponse {
   results: doctor[];
@@ -129,12 +130,11 @@ const SearchDoctor: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-12 ">
       <div className="flex flex-col space-y-6">
-        <h1 className="text-2xl font-bold text-gray-800">Doctor Details</h1>
-
+        <h1 className="text-2xl font-bold text-gray-800 text-center">Doctor Details</h1>
         {/* Search Input */}
-        <div className="relative max-w-md">
+        <div className="relative  m-auto w-[500px]">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
               className="h-5 w-5 text-gray-400"
@@ -215,6 +215,13 @@ const SearchDoctor: React.FC = () => {
         {!loading && !error && !hasSearched && (
           <div className="col-span-full text-center py-8">
             <p className="text-gray-500">
+              <Image 
+                  src="/File searching.gif" 
+                  alt="I Search" 
+                  width={240} 
+                  height={240} 
+                  className="imagfilter m-auto"
+              />
               Enter a search query to find doctors
             </p>
           </div>
