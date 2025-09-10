@@ -452,46 +452,63 @@ export default function SummaryGeneration({
 
         {/* Action Buttons */}
         <div className="flex justify-center space-x-4 mt-8 mb-8">
-          <button
-            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            onClick={handleApproveSummary}
-            disabled={isLoading}
-          >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            <span>Approve Summary</span>
-          </button>
-          <button
-            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            onClick={() => {
-              setIsEdit(!isEdit)
-              if (!isEdit) {
+          {!isEdit && (
+            <button
+              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              onClick={handleApproveSummary}
+              disabled={isLoading}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              <span>Approve Summary</span>
+            </button>
+          )}
+          
+          {!isEdit && (
+            <button
+              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              onClick={() => {
+                setIsEdit(true)
                 setEditedSummary(summaryContent)
-              } else {
-                handleSaveEditedSummary()
-              }
-            }}
-            disabled={isLoading}
-          >
-            {isEdit ? (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                <span>Save Changes</span>
-              </>
-            ) : (
-              <>
-                <Edit className="w-4 h-4 mr-2" />
-                <span>Edit Summary</span>
-              </>
-            )}
-          </button>
-          <button
-            className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            onClick={handleSaveSummary}
-            disabled={isLoading}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            <span>Save for Later</span>
-          </button>
+              }}
+              disabled={isLoading}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              <span>Edit Summary</span>
+            </button>
+          )}
+
+          {isEdit && (
+            <button
+              className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              onClick={handleSaveEditedSummary}
+              disabled={isLoading}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              <span>Save Changes</span>
+            </button>
+          )}
+
+          {isEdit && (
+            <button
+              className="flex items-center px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+              onClick={() => setIsEdit(false)}
+              disabled={isLoading}
+            >
+              <span>Cancel</span>
+            </button>
+          )}
+
+          {!isEdit && (
+            <button
+              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              onClick={handleSaveSummary}
+              disabled={isLoading}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              <span>Save for Later</span>
+            </button>
+          )}
+          
         </div>
       </div>
     </>
