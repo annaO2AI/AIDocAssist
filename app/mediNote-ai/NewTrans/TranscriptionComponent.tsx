@@ -31,7 +31,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
     disconnect,
     startRecording,
     stopRecording,
-    safeDisconnect,
+    // safeDisconnect,
   } = useTranscriptionWebSocket({
     sessionId,
     doctorId: 0,
@@ -77,7 +77,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
       const result = await APIService.endSession(sessionId)
       if (result) {
         setTranscriptionEnd(result)
-        safeDisconnect()
+        // safeDisconnect()
       }
     } catch (error) {
       console.error("Error ending session:", error)
@@ -177,21 +177,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
                       <div className="flex gap-3 items-center">
                         <div className="flex items-center">
                           <div className="flex items-center space-x-2">
-                            {msg.speaker === "Doctor" && (
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-normal">
-                                DR
-                              </div>
-                            )}
-                            {msg.speaker === "Patient" && (
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-600 text-white text-sm font-normal">
-                                PA
-                              </div>
-                            )}
-                            {msg.speaker === "Unknown" && (
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-600 text-white text-sm font-normal">
-                                UN
-                              </div>
-                            )}
+                           {msg.speakerName}
                           </div>
                         </div>
                         <p className="text-gray-800 leading-relaxed">
