@@ -104,9 +104,10 @@ const SearchDoctor: React.FC = () => {
     }
   };
 
-  const handleEnrollVoice = (doctorId: number) => {
+  const handleEnrollVoice = (doctor: doctor) => {
+    setSelectedDoctor(doctor);
     setIsVoiceModalOpen(true);
-    console.log(`Enroll voice for doctor with ID: ${doctorId}`);
+    console.log(`Enroll voice for doctor with ID: ${doctor.id}`);
   };
 
   const handleSave = async (updatedData: DoctorCreationTypes) => {
@@ -197,7 +198,7 @@ const SearchDoctor: React.FC = () => {
                   key={doctor.id}
                   doctor={doctor}
                   onUpdate={() => handleUpdate(doctor)}
-                  onEnrollVoice={() => handleEnrollVoice(doctor.id)}
+                  onEnrollVoice={() => handleEnrollVoice(doctor)}
                 />
               ))
             ) : (

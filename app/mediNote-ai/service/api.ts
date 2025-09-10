@@ -261,7 +261,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     try {
       const formData = new FormData();
       formData.append('file', audioFile);
-      const response = await fetch(`${API_SERVICE}/doctors/register_voice/0`, {
+      const response = await fetch(`${API_SERVICE}/doctors/register_voice/${id}`, {
         method: "POST",
         body: formData,
          credentials: 'include',
