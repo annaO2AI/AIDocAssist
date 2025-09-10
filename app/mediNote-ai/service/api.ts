@@ -298,9 +298,9 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-  static async startSession(patientId:number) {
+  static async startSession(patientId: number, doctorId: number) {
     try {
-      const response = await fetch(`${API_SERVICE}/session/start?doctor_id=0&patient_id=${patientId}`, {
+      const response = await fetch(`${API_SERVICE}/session/start?doctor_id=${doctorId}&patient_id=${patientId}`, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',

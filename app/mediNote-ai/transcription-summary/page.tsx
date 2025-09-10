@@ -85,7 +85,7 @@ export default function TranscriptionSummaryPage() {
     try {
       setApiError("")
       const data = await APIService.saveSummary({
-        doctor_id: 0,
+        doctor_id: 1,
         patient_id: patientId,
         session_id: sessionId,
         original_text: "",

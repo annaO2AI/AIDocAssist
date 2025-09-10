@@ -24,6 +24,7 @@ export default function ProcurementSearchPage() {
   const [hovered, setHovered] = useState(false)
   const [sessionId, setSessionId] = useState<number>()
   const [patientId, setPatientId] = useState<number>()
+  const [doctorId, setDoctorId] = useState<number>()
   const [currentState, setCurrentState] = useState<AppState>("patientCheck")
   const [transcriptionEnd, setTranscriptionEnd] = useState<TranscriptionSummary | null>(null)
 
@@ -44,12 +45,18 @@ export default function ProcurementSearchPage() {
   // Show sidebar on the talent-acquisition page
   const showSidebar = pathname === "/mediNote-ai/doctor-patient-voice"
 
-  const startRecording = async (patientId: number) => {
+  const startRecording = async (patientId: number, doctorIdParam?: number) => {
     try {
-      const data = await APIService.startSession(patientId)
+      const effectiveDoctorId = doctorIdParam ?? doctorId
+      if (!effectiveDoctorId) {
+        console.log("Doctor ID is required to start a session")
+        return
+      }
+      const data = await APIService.startSession(patientId, effectiveDoctorId)
       if (data) {
         setSessionId(data?.session_id)
         setPatientId(patientId)
+        setDoctorId(effectiveDoctorId)
         setCurrentState("transcription")
       }
     } catch (error) {

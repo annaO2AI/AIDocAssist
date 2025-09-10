@@ -134,7 +134,7 @@ export default function SummaryGeneration({
     try {
       setIsLoading(true)
       await APIService.saveSummary({
-        doctor_id: 0,
+        doctor_id: 1,
         patient_id: patientId,
         session_id: sessionId,
         original_text: summaryContent,

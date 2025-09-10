@@ -1,8 +1,9 @@
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import { APIService } from "../service/api"
 import ViewPatientList from "./ViewPatientList"
 import EnrollDoctorVoice from "./EnrollDoctorVoice"
 import PatientHistory from "./PatientHistory"
+import { SearchDoctorsResponse, doctor } from "../types"
 
 interface PatientCardProps {
   patient_id: number
@@ -28,7 +29,7 @@ interface ApiResponse {
 export default function CheckPatientVoice({
   handleStartCon,
 }: {
-  handleStartCon: (id: number) => void
+  handleStartCon: (patientId: number, doctorId: number) => void
 }) {
   const [users, setUsers] = useState<PatientCardProps[]>([])
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -36,6 +37,11 @@ export default function CheckPatientVoice({
   const [error, setError] = useState<string | null>(null)
   const [showPatientList, setShowPatientList] = useState(true)
   const [selectedPatientIds, setSelectedPatientIds] = useState<number[]>([]) // Changed to array
+  const [doctorSearch, setDoctorSearch] = useState<string>("")
+  const [doctorResults, setDoctorResults] = useState<doctor[]>([])
+  const [selectedDoctor, setSelectedDoctor] = useState<doctor | null>(null)
+  const [doctorSearching, setDoctorSearching] = useState(false)
+  const [doctorError, setDoctorError] = useState<string | null>(null)
 
   // Memoized fetchUsers function
   const fetchUsers = useCallback(async (query: string) => {
@@ -83,6 +89,29 @@ export default function CheckPatientVoice({
     }
   }, [])
 
+  const searchDoctors = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setDoctorError("Please enter doctor name or ID")
+      setDoctorResults([])
+      setSelectedDoctor(null)
+      setDoctorSearching(false)
+      return
+    }
+    try {
+      setDoctorSearching(true)
+      setDoctorError(null)
+      const data: SearchDoctorsResponse = await APIService.SearchDoctor(query)
+      setDoctorResults(data?.results || [])
+    } catch (err) {
+      setDoctorError(
+        err instanceof Error ? `Failed to search doctors: ${err.message}` : "Failed to search doctors"
+      )
+      setDoctorResults([])
+    } finally {
+      setDoctorSearching(false)
+    }
+  }, [])
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,14 +128,68 @@ export default function CheckPatientVoice({
 
   // Function to handle Start Session button click
   const handleStartSession = (patientId: number) => {
+    if (!selectedDoctor) {
+      setDoctorError("Please select a doctor before starting the session")
+      return
+    }
     setShowPatientList(false)
-    handleStartCon(patientId)
+    handleStartCon(patientId, selectedDoctor.id)
   }
 
   return (
     <div className="Patient-voice mx-auto mb-6 mediNote-widthfix pl-4 mt-16">
       <div className="w-full flex gap-3 items-start justify-between">
         <div className="relative mb-2 w-[800px]">
+          <div className="pb-1 ot-title font-medium text-xl">Select Doctor</div>
+          <div className="flex items-start gap-3 mb-6">
+            <div className="relative w-full">
+              <input
+                type="text"
+                className="block h-[50px] w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="Search doctor by ID or name"
+                value={doctorSearch}
+                onChange={(e) => setDoctorSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    searchDoctors(doctorSearch)
+                  }
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => searchDoctors(doctorSearch)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {doctorSearching ? "Searching..." : "Search"}
+            </button>
+          </div>
+          {doctorError && (
+            <div className="p-2 text-sm text-red-600">{doctorError}</div>
+          )}
+          {doctorResults.length > 0 && (
+            <div className="mb-6 max-h-48 overflow-auto border border-gray-200 rounded-md">
+              {doctorResults.map((doc) => (
+                <button
+                  key={doc.id}
+                  type="button"
+                  onClick={() => setSelectedDoctor(doc)}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
+                    selectedDoctor?.id === doc.id ? "bg-indigo-50" : "bg-white"
+                  }`}
+                >
+                  <span className="font-medium">{doc.first_name} {doc.last_name}</span>
+                  <span className="ml-2 text-gray-500">(ID: {doc.id})</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {selectedDoctor && (
+            <div className="mb-6 text-sm text-gray-700">
+              Selected doctor: <span className="font-semibold">{selectedDoctor.first_name} {selectedDoctor.last_name}</span> (ID: {selectedDoctor.id})
+            </div>
+          )}
           <div className="pb-1 ot-title font-medium text-xl">
             Search Patients
           </div>
@@ -143,7 +226,7 @@ export default function CheckPatientVoice({
             </button>
           </form>
         </div>
-        <EnrollDoctorVoice />
+        {/* <EnrollDoctorVoice /> */}
       </div>
 
       <div>
