@@ -31,7 +31,7 @@ const ViewPatientList = ({ patients, handleStartCon }: ViewPatientListProps) => 
         return (
           <div
             key={patient.patient_id}
-            className="max-w-md rounded-lg overflow-hidden shadow-lg bg-white border border-gray-200 hover:shadow-xl transition-shadow duration-300"
+            className="max-w-md rounded-lg overflow-hidden shadow-sm bg-white border border-gray-200 hover:shadow-xl transition-shadow duration-300"
           >
             <div className="px-12 py-8">
               <div>

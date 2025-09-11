@@ -278,8 +278,18 @@ body {
   }
   .custom-gradient {
   background: linear-gradient(to right, #EDFAFF, #F0EEFF);
-}
-.enrollDoctorVoice{
-  overflow: auto;
-}
+  }
+  .enrollDoctorVoice{
+    overflow: auto;
+  }
+  .ViewPatientList .grid-cols-3{
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  .ViewPatientList .grid-cols-3 .max-w-md {
+    width: 100%;
+    max-width: 100%;
+  }
+  .ViewPatientList .gap-4 {
+        gap: 0.3rem;
+  }
 }
