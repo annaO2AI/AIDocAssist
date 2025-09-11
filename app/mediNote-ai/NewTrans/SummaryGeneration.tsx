@@ -39,6 +39,7 @@ export default function SummaryGeneration({
   const [apiError, setApiError] = useState("")
   const [isEdit, setIsEdit] = useState(false)
   const [editedSummary, setEditedSummary] = useState("")
+  const [icdSectionText, setIcdSectionText] = useState<string>("")
   const [notification, setNotification] = useState<{ message: string; show: boolean }>({
     message: "",
     show: false,
@@ -81,6 +82,69 @@ export default function SummaryGeneration({
     fetchSummaryById()
   }, [fetchSummaryById])
 
+  // Helper to upsert the ICD section into the editable summary text
+  const upsertIcdSection = useCallback((baseText: string, section: string) => {
+    if (!section) return baseText
+    const lines = baseText.split("\n")
+    const headerIndex = lines.findIndex((l) => /^##\s+ICD Codes\s*\(/.test(l))
+    if (headerIndex === -1) {
+      // Append with spacing
+      const needsNewline = baseText.endsWith("\n") ? "" : "\n"
+      return baseText + needsNewline + section
+    }
+    // Replace section from headerIndex until next section header (## ...)
+    let endIndex = lines.length
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+      if (/^##\s+/.test(lines[i])) {
+        endIndex = i
+        break
+      }
+    }
+    const before = lines.slice(0, headerIndex).join("\n")
+    const after = lines.slice(endIndex).join("\n")
+    const mid = section.replace(/\n+$/, "") // avoid trailing extra newlines
+    const parts = [before, mid, after].filter((p) => p.length > 0)
+    return parts.join("\n") + (after ? "" : "\n")
+  }, [])
+
+  // Listen for ICD selection updates and initialize from localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const initializeFromStorage = () => {
+      try {
+        const raw = localStorage.getItem(`icdSelection:${sessionId}`)
+        if (!raw) return
+        const parsed = JSON.parse(raw) as { system?: string; items?: Array<{ code: string; title: string }>; updatedAt?: string }
+        if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0 && parsed.system) {
+          const header = `\n\n ICD Codes (${parsed.system})\n`
+          // Deduplicate by code
+          const unique = parsed.items.reduce((acc: Array<{ code: string; title: string }>, it) => {
+            if (!acc.some((x) => x.code === it.code)) acc.push(it)
+            return acc
+          }, [])
+          const lines = unique.map((it) => `- ${it.code}: ${it.title}`).join("\n")
+          setIcdSectionText(header + lines + "\n")
+        } else {
+          setIcdSectionText("")
+        }
+      } catch {
+        // noop
+      }
+    }
+
+    initializeFromStorage()
+
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { sessionId: number; sectionText: string } | undefined
+      if (!detail || Number(detail.sessionId) !== Number(sessionId)) return
+      setIcdSectionText(detail.sectionText || "")
+    }
+
+    window.addEventListener("icdSelectionUpdated", handler as EventListener)
+    return () => window.removeEventListener("icdSelectionUpdated", handler as EventListener)
+  }, [sessionId])
+
   // Parse and format the entire content dynamically
   const parseContentSections = (content: string) => {
     if (!content) return []
@@ -112,6 +176,15 @@ export default function SummaryGeneration({
     setSummaryContent(summaryId.summary.content)
   }, [summaryId])
 
+  // When entering edit mode or ICD section changes, ensure the ICD section is present in the edited text
+  useEffect(() => {
+    if (!isEdit) return
+    setEditedSummary((current) => {
+      const base = current && current.trim().length > 0 ? current : summaryContent
+      return upsertIcdSection(base || "", icdSectionText)
+    })
+  }, [isEdit, icdSectionText, summaryContent, upsertIcdSection])
+
   const handleSaveEditedSummary = async () => {
     if (!transcriptionEnd?.summary_id) return
     try {
@@ -123,6 +196,13 @@ export default function SummaryGeneration({
       setSummaryContent(editedSummary)
       setIsEdit(false)
       showNotification("Summary updated successfully!")
+      // Broadcast edit mode off for ICD selector consumers
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false")
+          window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }))
+        }
+      } catch {}
     } catch (err) {
       handleApiError(err, "Failed to update summary")
     } finally {
@@ -469,6 +549,13 @@ export default function SummaryGeneration({
               onClick={() => {
                 setIsEdit(true)
                 setEditedSummary(summaryContent)
+                // Broadcast edit mode so ICD selector allows selection
+                try {
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "true")
+                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: true } }))
+                  }
+                } catch {}
               }}
               disabled={isLoading}
             >
@@ -491,7 +578,16 @@ export default function SummaryGeneration({
           {isEdit && (
             <button
               className="flex items-center px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-              onClick={() => setIsEdit(false)}
+              onClick={() => {
+                setIsEdit(false)
+                // Broadcast edit mode off
+                try {
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false")
+                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }))
+                  }
+                } catch {}
+              }}
               disabled={isLoading}
             >
               <span>Cancel</span>
