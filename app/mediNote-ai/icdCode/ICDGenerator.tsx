@@ -313,7 +313,7 @@ const ICDGenerator: React.FC<ICDGeneratorProps> = ({ sessionId }) => {
           {/* Search System Dropdown */}
           <div className='w-full'>
             <label htmlFor="searchSystem" className="block text-sm font-medium text-gray-700">
-              System
+              ICD Code System
             </label>
             <select
               id="searchSystem"
