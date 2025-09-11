@@ -139,11 +139,11 @@ export default function CheckPatientVoice({
   return (
     <div className=" Patient-voice mx-auto mb-6 mediNote-widthfix mt-16">
       <div className="w-full flex gap-3 items-start justify-between ">
-        <div className="relative mb-2 w-full md:w-auto flex gap-3">
+        <div className="relative mb-2 w-full flex gap-3">
           {/* Docter */}
-          <div className="SearchDoctor w-[700px]  bg-white p-12 border-o2 rounded-lg">
-              <div className="pb-1 ot-title font-medium text-xl">Search Doctor</div>
-              <div className="flex items-start gap-3 mb-6">
+          <div className="SearchDoctor  w-full bg-white py-6 px-12 border-o2 rounded-lg">
+              <div className="pb-1 ot-title font-medium text-xl text-center mb-6 mt-3">Search Doctor</div>
+              <div className="flex items-start gap-3 mb-3">
                 <div className="relative w-full">
                   <input
                     type="text"
@@ -207,8 +207,8 @@ export default function CheckPatientVoice({
               )}
           </div>
           {/* Patients */}
-          <div className="patientSearch w-[700px]  bg-white p-12 border-o2 rounded-lg">
-              <div className="pb-1 ot-title font-medium text-xl">
+          <div className="patientSearch  w-full bg-white py-6 px-12 border-o2 rounded-lg">
+              <div className="pb-1 ot-title font-medium text-xl text-center mb-6 mt-3">
                 Search Patients
               </div>
               <form onSubmit={handleSubmit} className="flex items-center gap-3">
