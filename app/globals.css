@@ -292,4 +292,20 @@ body {
   .ViewPatientList .gap-4 {
         gap: 0.3rem;
   }
+  .ICDGenerator-pupup{
+    right: 0;
+    top: 0;
+    height: 100%;
+    overflow: hidden;
+    overflow-y: scroll;
+    padding: 30px;
+    width: 550px;
+    background-color: #fff;
+    box-shadow: -9px 11px 31px #0000001a;
+    z-index: 99;
+  }
+  .closeBtn{
+    background-color: none;
+    border: none;
+  }
 }

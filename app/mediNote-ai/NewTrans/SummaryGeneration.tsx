@@ -15,6 +15,8 @@ type TextCase = {
   patientId: number
   transcriptionEnd: TranscriptionSummary
   summaryData: SummaryText
+  showICDGenerator: boolean
+  setShowICDGenerator: (show: boolean) => void
 }
 
 type SummaryText = {
@@ -35,6 +37,8 @@ export default function SummaryGeneration({
   patientId,
   transcriptionEnd,
   summaryData,
+  showICDGenerator,
+  setShowICDGenerator,
 }: TextCase) {
   const [apiError, setApiError] = useState("")
   const [isEdit, setIsEdit] = useState(false)
@@ -368,7 +372,7 @@ export default function SummaryGeneration({
   return (
     <>
       {isLoading && <Loader />}
-      <div className={`w-full mx-auto p-6 bg-gray-50 min-h-screen rounded-lg ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`w-full mt-6 mx-auto bg-gray-50 min-h-screen rounded-lg mediNote-widthfix ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Notification */}
         {notification.show && (
           <div className="fixed top-4 right-4 z-50">
@@ -425,8 +429,14 @@ export default function SummaryGeneration({
 
         {/* Summary Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
+            <button 
+              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              onClick={() => setShowICDGenerator(!showICDGenerator)}
+            >
+              ICD Code Generator
+            </button>
           </div>
           <div className="flex justify-between items-start">
             <div className="w-full pr-4">
@@ -447,12 +457,13 @@ export default function SummaryGeneration({
                 </div>
               )}
             </div>
-            <div className="w-[300px] flex items-center justify-center">
+            <div className="w-[300px] flex  flex-col items-center justify-center">
               <Image
                 src="/summary-docter-petiont.svg"
                 alt="Doctor-Patient Illustration"
                 width={250}
                 height={170}
+                className="mt-12"
               />
             </div>
           </div>

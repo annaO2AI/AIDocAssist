@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { usePathname } from "next/navigation"
 import Sidebar from "../../components/dashboard/Sidebar"
 import { DashboardProvider } from "../../context/DashboardContext"
@@ -27,11 +27,36 @@ export default function ProcurementSearchPage() {
   const [doctorId, setDoctorId] = useState<number>()
   const [currentState, setCurrentState] = useState<AppState>("patientCheck")
   const [transcriptionEnd, setTranscriptionEnd] = useState<TranscriptionSummary | null>(null)
+  const [showICDGenerator, setShowICDGenerator] = useState(false)
+  const icdRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebar-collapsed")
     if (stored !== null) setCollapsed(stored === "true")
   }, [])
+
+  // Handle click outside to close ICDGenerator
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (icdRef.current && !icdRef.current.contains(event.target as Node)) {
+        setShowICDGenerator(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Handle icdGeneratorClose event to hide ICDGenerator
+  useEffect(() => {
+    const handleICDClose = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { sessionId: number } | undefined
+      if (detail && Number(detail.sessionId) === Number(sessionId)) {
+        setShowICDGenerator(false)
+      }
+    }
+    window.addEventListener("icdGeneratorClose", handleICDClose as EventListener)
+    return () => window.removeEventListener("icdGeneratorClose", handleICDClose as EventListener)
+  }, [sessionId])
 
   const toggleCollapse = () => {
     const newCollapsed = !collapsed
@@ -63,7 +88,6 @@ export default function ProcurementSearchPage() {
       console.log("Failed to start recording:", error)
     }
   }
-
 
   return (
     <DashboardProvider>
@@ -101,12 +125,15 @@ export default function ProcurementSearchPage() {
                   patientId={patientId}
                   transcriptionEnd={transcriptionEnd}
                   summaryData={sampleData}
+                  showICDGenerator={showICDGenerator}
+                  setShowICDGenerator={setShowICDGenerator}
                 />
               )}
-{sessionId && patientId && transcriptionEnd && (
-                <ICDGenerator sessionId={sessionId}/>
+              {sessionId && patientId && transcriptionEnd && showICDGenerator && (
+                <div className="ICDGenerator-pupup fixed" ref={icdRef}>
+                    <ICDGenerator sessionId={sessionId} />
+                </div>
               )}
-
             </div>
           </main>
         </div>

@@ -142,7 +142,7 @@ export default function CheckPatientVoice({
         <div className="relative mb-2 w-full md:w-auto flex gap-3">
           {/* Docter */}
           <div className="SearchDoctor w-[700px]  bg-white p-12 border-o2 rounded-lg">
-              <div className="pb-1 ot-title font-medium text-xl">Select Doctor</div>
+              <div className="pb-1 ot-title font-medium text-xl">Search Doctor</div>
               <div className="flex items-start gap-3 mb-6">
                 <div className="relative w-full">
                   <input
