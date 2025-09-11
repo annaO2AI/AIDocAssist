@@ -68,10 +68,6 @@ const ICDGenerator: React.FC<ICDGeneratorProps> = ({ sessionId }) => {
       } else {
         newSet.add(itemId);
       }
-      // Dispatch instantly so Visit Summary updates without waiting for effect flush
-      if (searchSystem) {
-        persistSelection(newSet, searchSystem);
-      }
       return newSet;
     });
   };
@@ -169,10 +165,7 @@ const ICDGenerator: React.FC<ICDGeneratorProps> = ({ sessionId }) => {
     setIcdCodes([]);
     // Clear previous selections when searching new codes
     setSelectedItems(new Set());
-    // Notify listeners immediately that selection cleared
-    if (searchSystem) {
-      persistSelection(new Set(), searchSystem);
-    }
+    // Persist will run via effect after state updates
     
     try {
       const response = await fetch(

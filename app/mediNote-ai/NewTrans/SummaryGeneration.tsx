@@ -186,14 +186,19 @@ export default function SummaryGeneration({
   }, [isEdit, icdSectionText, summaryContent, upsertIcdSection])
 
   const handleSaveEditedSummary = async () => {
-    if (!transcriptionEnd?.summary_id) return
+    // Prefer summary_id from fetched summary; fallback to props if available
+    const resolvedSummaryId = summaryId?.summary_id ?? transcriptionEnd?.summary_id ?? summaryData?.summary_id
+    if (!resolvedSummaryId) {
+      handleApiError(new Error("summary_id not available"), "Cannot update summary")
+      return
+    }
     try {
       setIsLoading(true)
       await APIService.editSummary({
-        summaryId: transcriptionEnd.summary_id,
-        edited_text: editedSummary,
+        summaryId: resolvedSummaryId,
+        edited_text: editedSummary || summaryContent,
       })
-      setSummaryContent(editedSummary)
+      setSummaryContent(editedSummary || summaryContent)
       setIsEdit(false)
       showNotification("Summary updated successfully!")
       // Broadcast edit mode off for ICD selector consumers
