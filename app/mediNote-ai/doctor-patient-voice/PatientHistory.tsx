@@ -32,6 +32,14 @@ interface PatientHistoryProps {
 }
 
 export default function PatientHistory({ patientIds }: PatientHistoryProps) {
+  const normalizeHeaderText = (headerText: string): string => {
+    // Normalize "Patient Chief Concerns & Symptoms" to "Patient Concerns & Symptoms"
+    if (headerText === "Patient Chief Concerns & Symptoms") {
+      return "Patient Concerns & Symptoms";
+    }
+    return headerText;
+  };
+
   const parseHistoryField = (rawHistory: string): ParsedSession[] => {
     const parts = rawHistory.split("---").filter(Boolean);
 
@@ -46,9 +54,12 @@ export default function PatientHistory({ patientIds }: PatientHistoryProps) {
       const sectionMatches = summaryContent.match(sectionRegex) || [];
       let remainingContent = summaryContent;
       const sections: { title: string; content: string[] }[] = [];
+      let doctorAssessmentSection: { title: any; content: any } | null = null;
+      let possibleCausesContent: string[] = [];
 
       sectionMatches.forEach((header, index) => {
-        const headerText = header.replace(/^#+ /, "").trim();
+        const rawHeaderText = header.replace(/^#+ /, "").trim();
+        const headerText = normalizeHeaderText(rawHeaderText);
         const startIdx = summaryContent.indexOf(header) + header.length;
         const nextHeaderIdx = sectionMatches[index + 1]
           ? summaryContent.indexOf(sectionMatches[index + 1])
@@ -62,12 +73,49 @@ export default function PatientHistory({ patientIds }: PatientHistoryProps) {
           .map((line) => line.replace(/^-\s*/, "")) // Remove bullet prefix
           .filter((line) => line.length > 0);
 
-        sections.push({
-          title: headerText,
-          content: contentLines.length > 0 ? contentLines : [content || "None specified"],
-        });
+        const sectionContent = contentLines.length > 0 ? contentLines : [content || "None specified"];
+
+        // Check if this is the "Possible Causes / Differential (based only on the convo)" section
+        if (rawHeaderText === "Possible Causes / Differential (based only on the convo)") {
+          possibleCausesContent = sectionContent;
+        }
+        // Check if this is the "Doctor's Assessment & Plan" section
+        else if (headerText === "Doctor's Assessment & Plan") {
+          doctorAssessmentSection = {
+            title: headerText,
+            content: sectionContent,
+          };
+        }
+        // For all other sections, add them normally
+        else {
+          sections.push({
+            title: headerText,
+            content: sectionContent,
+          });
+        }
+
         remainingContent = remainingContent.replace(header, "").replace(content, "");
       });
+
+      // Merge Possible Causes content into Doctor's Assessment & Plan
+      // if (doctorAssessmentSection) {
+      //   if (possibleCausesContent.length > 0) {
+      //     const mergedContent = [...doctorAssessmentSection.content, ...possibleCausesContent];
+      //     sections.push({
+      //       title: doctorAssessmentSection.title,
+      //       content: mergedContent,
+      //     });
+      //   } else {
+      //     sections.push(doctorAssessmentSection);
+      //   }
+      // } else if (possibleCausesContent.length > 0) {
+      //   // If there's no Doctor's Assessment section but there is Possible Causes content,
+      //   // create a Doctor's Assessment section with the Possible Causes content
+      //   sections.push({
+      //     title: "Doctor's Assessment & Plan",
+      //     content: possibleCausesContent,
+      //   });
+      // }
 
       // Handle any remaining content (e.g., "Summary content not available")
       if (remainingContent.trim()) {
@@ -107,7 +155,7 @@ export default function PatientHistory({ patientIds }: PatientHistoryProps) {
         setPatientHistories(validResults);
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch patient histories");
+        setError("Failed to fetch Patient  Medical History");
         setLoading(false);
         console.error(err);
       }
@@ -124,17 +172,17 @@ export default function PatientHistory({ patientIds }: PatientHistoryProps) {
   const Loader = () => (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-50 bg-opacity-75 z-50">
       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
-      <p className="mt-4 text-gray-600 text-lg">Loading patient histories...</p>
+      <p className="mt-4 text-gray-600 text-lg">Loading Patient Medical History...</p>
     </div>
   );
 
   if (loading) return <Loader />;
   if (error) return <div className="p-4 text-red-500 bg-red-50 border border-red-200 rounded-lg">{error}. Please try again later.</div>;
-  if (patientHistories.length === 0) return <div className="p-4">No patient histories available</div>;
+  if (patientHistories.length === 0) return <div className="p-4">No Patient  Medical History available</div>;
 
   return (
     <div className="patient-history p-4 border rounded-lg bg-white shadow-sm mt-4">
-      <h3 className="text-lg font-semibold mb-3">Patient Histories</h3>
+      <h3 className="text-lg font-semibold mb-3">Patient Medical History</h3>
 
       {patientHistories.map((patientData, index) => (
         <div key={patientData.patient.id} className="mb-6">
