@@ -33,9 +33,9 @@ interface PatientHistoryProps {
 
 export default function PatientHistory({ patientIds }: PatientHistoryProps) {
   const normalizeHeaderText = (headerText: string): string => {
-    // Normalize "Patient Chief Concerns & Symptoms" to "Patient Concerns & Symptoms"
-    if (headerText === "Patient Chief Concerns & Symptoms") {
-      return "Patient Concerns & Symptoms";
+    // Normalize "Patient Chief Concerns and Symptoms" to "Patient Concerns and Symptoms"
+    if (headerText === "Patient Chief Concerns and Symptoms") {
+      return "Patient Concerns and Symptoms";
     }
     return headerText;
   };
@@ -79,8 +79,8 @@ export default function PatientHistory({ patientIds }: PatientHistoryProps) {
         if (rawHeaderText === "Possible Causes / Differential (based only on the convo)") {
           possibleCausesContent = sectionContent;
         }
-        // Check if this is the "Doctor's Assessment & Plan" section
-        else if (headerText === "Doctor's Assessment & Plan") {
+        // Check if this is the "Doctor's Assessment and follow-up " section
+        else if (headerText === "Doctor's Assessment and follow-up ") {
           doctorAssessmentSection = {
             title: headerText,
             content: sectionContent,
@@ -97,7 +97,7 @@ export default function PatientHistory({ patientIds }: PatientHistoryProps) {
         remainingContent = remainingContent.replace(header, "").replace(content, "");
       });
 
-      // Merge Possible Causes content into Doctor's Assessment & Plan
+      // Merge Possible Causes content into Doctor's Assessment and follow-up 
       // if (doctorAssessmentSection) {
       //   if (possibleCausesContent.length > 0) {
       //     const mergedContent = [...doctorAssessmentSection.content, ...possibleCausesContent];
@@ -112,7 +112,7 @@ export default function PatientHistory({ patientIds }: PatientHistoryProps) {
       //   // If there's no Doctor's Assessment section but there is Possible Causes content,
       //   // create a Doctor's Assessment section with the Possible Causes content
       //   sections.push({
-      //     title: "Doctor's Assessment & Plan",
+      //     title: "Doctor's Assessment and follow-up ",
       //     content: possibleCausesContent,
       //   });
       // }
