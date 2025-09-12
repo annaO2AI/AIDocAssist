@@ -518,7 +518,7 @@ const ICDGenerator: React.FC<ICDGeneratorProps> = ({ sessionId }) => {
       {!isEditMode && (
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
-            Enable "Edit Summary" mode to select/deselect ICD codes.
+            Enable Edit Summary mode to select/deselect ICD codes.
           </p>
         </div>
       )}
