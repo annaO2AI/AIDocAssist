@@ -2,39 +2,39 @@ import React, { useState } from "react"
 import { MicOff, Mic, AlertCircle, CheckCircle, X } from "lucide-react"
 import { useAudioRecording } from "../hooks/useAudioRecording"
 import { APIService } from "../service/api"
-
+ 
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
   id: number
 }
-
+ 
 // Function to convert audio blob to WAV format
 const convertToWav = async (audioBlob: Blob): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
     const fileReader = new FileReader()
-
+ 
     fileReader.onload = async (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-        
+       
         // Convert to WAV
         const wavBuffer = audioBufferToWav(audioBuffer)
         const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' })
-        
+       
         resolve(wavBlob)
       } catch (error) {
         reject(error)
       }
     }
-
+ 
     fileReader.onerror = () => reject(new Error('Failed to read audio file'))
     fileReader.readAsArrayBuffer(audioBlob)
   })
 }
-
+ 
 // Function to convert AudioBuffer to WAV format
 const audioBufferToWav = (buffer: AudioBuffer): ArrayBuffer => {
   const length = buffer.length
@@ -45,19 +45,19 @@ const audioBufferToWav = (buffer: AudioBuffer): ArrayBuffer => {
   const byteRate = sampleRate * blockAlign
   const dataSize = length * blockAlign
   const bufferSize = 44 + dataSize
-
+ 
   const arrayBuffer = new ArrayBuffer(bufferSize)
   const view = new DataView(arrayBuffer)
-
+ 
   // WAV header
   const writeString = (offset: number, string: string) => {
     for (let i = 0; i < string.length; i++) {
       view.setUint8(offset + i, string.charCodeAt(i))
     }
   }
-
-  writeString(0, 'RIFF') 
-  view.setUint32(4, bufferSize - 8, true) 
+ 
+  writeString(0, 'RIFF')
+  view.setUint32(4, bufferSize - 8, true)
   writeString(8, 'WAVE')
   writeString(12, 'fmt ')
   view.setUint32(16, 16, true)
@@ -68,8 +68,8 @@ const audioBufferToWav = (buffer: AudioBuffer): ArrayBuffer => {
   view.setUint16(32, blockAlign, true)
   view.setUint16(34, 16, true)
   writeString(36, 'data')
-  view.setUint32(40, dataSize, true) 
-
+  view.setUint32(40, dataSize, true)
+ 
   // Convert audio buffer to PCM
   let offset = 44
   for (let channel = 0; channel < numberOfChannels; channel++) {
@@ -81,10 +81,10 @@ const audioBufferToWav = (buffer: AudioBuffer): ArrayBuffer => {
       offset += 2
     }
   }
-
+ 
   return arrayBuffer
 }
-
+ 
 export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
   const {
     isRecording,
@@ -97,21 +97,21 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
   const [error, setError] = useState<string | null>(null)
   const [enrollmentStatus, setEnrollmentStatus] = useState(false)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
-
+ 
   const handleStartEnrollment = async () => {
     setError(null)
     setShowSuccessPopup(false)
     setEnrollmentStatus(true)
     await startRecording()
   }
-
+ 
   const handleStopEnrollment = async () => {
     const audioBlob = await stopRecording()
     if (!audioBlob) {
       setError("Failed to capture audio")
       return
     }
-    
+   
     setIsLoading(true)
     try {
       // Convert audio blob to proper WAV format
@@ -119,7 +119,7 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
       const audioFile = new File([wavBlob], `${id}.wav`, {
         type: "audio/wav",
       })
-      
+     
       const response = await APIService.enrollPatientVoice(id, audioFile)
       if (response) {
         setShowSuccessPopup(true)
@@ -136,16 +136,16 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
       setEnrollmentStatus(false)
     }
   }
-
+ 
   const handleSuccessContinue = () => {
     setShowSuccessPopup(false)
     onClose()
   }
-
+ 
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl"> {/* Increased max width */}
           <div className="flex justify-between items-center border-b p-4">
             <h3 className="text-lg font-semibold">Enroll Patient Voice</h3>
             <button
@@ -155,6 +155,34 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
               <X className="h-6 w-6" />
             </button>
           </div>
+         
+          {/* Instructions Section */}
+          <div className="p-4 bg-blue-50 border-b">
+            <h4 className="font-medium text-blue-800 mb-2">Please read the following text clearly:</h4>
+            <div className="bg-white p-4 rounded-lg border border-blue-200 max-h-60 overflow-y-auto">
+              <p className="text-gray-700 leading-relaxed text-sm">
+                Hello, my name is [Patient's Name].<br />
+                I am here for a health checkup today.<br />
+                I sometimes feel pain in my chest.<br />
+                My blood pressure has been high for a week.<br />
+                I also feel tired when I climb stairs.<br />
+                I take one tablet every morning after breakfast.<br />
+                I drink enough water and eat fruits daily.<br />
+                I do not have any allergies to medicine.<br />
+                Sometimes I feel dizzy when I stand quickly.<br />
+                My doctor asked me to record my voice.<br />
+                I am ready to follow the treatment plan.<br />
+                I will take my medicines regularly.<br />
+                Please note my health record carefully.<br />
+                I understand this voice will be saved securely.<br />
+                Thank you, I have completed the recording.
+              </p>
+            </div>
+            <p className="text-xs text-blue-600 mt-2">
+              Speak clearly and at a normal pace. Make sure you're in a quiet environment.
+            </p>
+          </div>
+ 
           <div className="space-y-3 p-4">
             {!enrollmentStatus ? (
               <button
@@ -163,7 +191,7 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
                 disabled={isLoading}
               >
                 <Mic className="w-5 h-5" />
-                <span>{isLoading ? "Processing..." : "Enroll Patient Voice"}</span>
+                <span>{isLoading ? "Processing..." : "Start Recording"}</span>
               </button>
             ) : (
               <button
@@ -178,7 +206,7 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
               <div className="text-center">
                 <div className="inline-flex items-center space-x-2 text-red-600">
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span>Recording in progress...</span>
+                  <span>Recording in progress... Speak clearly</span>
                 </div>
               </div>
             )}
@@ -191,7 +219,7 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
           </div>
         </div>
       </div>
-
+ 
       {/* Success Popup */}
       {showSuccessPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

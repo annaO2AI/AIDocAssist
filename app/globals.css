@@ -308,4 +308,45 @@ body {
     background-color: none;
     border: none;
   }
+  .aside-style-left{
+    background: #181F64;
+    background: linear-gradient(160deg,rgba(24, 31, 100, 1) 35%, rgba(15, 70, 153, 1) 100%);
+  }
+  .showdo-gradiant{
+    right: 0;
+    top: 0;
+    border: 0;
+    height: 100%;
+    align-content: center;
+    align-items: center;
+    z-index: -1;
+  }
+  .svg-white svg path{
+    fill: #fff;
+  }
+  .ont-hide-new-co .newConvetsotiotext{
+    font-size: 0;
+    display: none;
+  }
+  .bottom-helo-full{
+    bottom: 5px;
+    left: 10px;
+    margin: auto;
+    width: 230px;
+    font-size: 12px;
+    font-weight: 100;
+    align-items: center;
+    padding: 17px;
+  }
+  .bottom-helo-slide{
+    bottom: 5px;
+    left: 10px;
+    margin: auto;
+    width: 48px;
+    font-weight: 100;
+    align-items: center;
+    padding: 0;
+    font-size: 0;
+  }
+
 }

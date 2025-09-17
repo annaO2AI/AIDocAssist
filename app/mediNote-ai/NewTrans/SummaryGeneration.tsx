@@ -518,7 +518,7 @@ export default function SummaryGeneration({
             height={42}
           />
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        {/* <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Patient Information</h2>
           <div className="flex flex-wrap gap-3">
             {[
@@ -537,7 +537,7 @@ export default function SummaryGeneration({
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
