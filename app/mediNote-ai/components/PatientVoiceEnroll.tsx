@@ -161,7 +161,7 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
             <h4 className="font-medium text-blue-800 mb-2">Please read the following text clearly:</h4>
             <div className="bg-white p-4 rounded-lg border border-blue-200 max-h-60 overflow-y-auto">
               <p className="text-gray-700 leading-relaxed text-sm">
-                Hello, my name is [Patient's Name].<br />
+                Hello, my name is [Patient&apos;s Name].<br />
                 I am here for a health checkup today.<br />
                 I sometimes feel pain in my chest.<br />
                 My blood pressure has been high for a week.<br />
@@ -179,7 +179,7 @@ export const PatientVoiceEnroll: React.FC<ModalProps> = ({ onClose, id }) => {
               </p>
             </div>
             <p className="text-xs text-blue-600 mt-2">
-              Speak clearly and at a normal pace. Make sure you're in a quiet environment.
+              Speak clearly and at a normal pace. Make sure you&apos;re in a quiet environment.
             </p>
           </div>
  

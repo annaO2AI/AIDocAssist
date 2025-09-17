@@ -363,6 +363,10 @@ export default function SummaryGeneration({
     return sections.map((section, index) => {
       if (!section) return null;
       const { level, title, content: sectionContent } = section;
+      const displayTitle = title === "Patient Chief Concerns & Symptoms"
+        ? "Patient Concerns & Symptoms"
+        : title;
+
       const formatContent = (text: string) => {
         const lines = text.split('\n').filter(line => line.trim());
         return lines.map((line, lineIndex) => {
@@ -389,7 +393,7 @@ export default function SummaryGeneration({
         : 'text-md font-medium text-gray-800 mb-2 mt-4';
       return (
         <div key={index} className="mb-4">
-          <HeaderTag className={headerClass}>{title}</HeaderTag>
+          <HeaderTag className={headerClass}>{displayTitle}</HeaderTag>
           <div className="pl-2">
             {sectionContent.includes('-') || sectionContent.includes('•') ? (
               <ul className="list-none space-y-1">{formatContent(sectionContent)}</ul>
