@@ -56,12 +56,7 @@ export default function SummaryGeneration({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
 
-  // Validate props
-  if (!sessionId || !patientId || !transcriptionEnd || !summaryData) {
-    console.error("Missing required props in SummaryGeneration");
-    return <div>Error: Missing required props</div>;
-  }
-
+  // Define all Hooks first
   const handleApiError = useCallback(
     (error: unknown, context: string) => {
       const message = error instanceof Error ? error.message : "An unknown error occurred";
@@ -71,10 +66,10 @@ export default function SummaryGeneration({
     []
   );
 
-  const showNotification = (message: string) => {
+  const showNotification = useCallback((message: string) => {
     setNotification({ message, show: true });
     setTimeout(() => setNotification({ message: "", show: false }), 3000);
-  };
+  }, []);
 
   const loadAudio = useCallback(async () => {
     if (!sessionId) return;
@@ -83,9 +78,8 @@ export default function SummaryGeneration({
       const { blob, filename } = await APIService.downloadRecording(sessionId);
       const audioUrl = URL.createObjectURL(blob);
       const newAudio = new Audio(audioUrl);
-      newAudio.preload = 'metadata'; // Load metadata for duration, etc.
+      newAudio.preload = 'metadata';
       setAudio((prevAudio) => {
-        // Cleanup previous audio if exists
         if (prevAudio && prevAudio.src) {
           URL.revokeObjectURL(prevAudio.src);
         }
@@ -97,7 +91,64 @@ export default function SummaryGeneration({
     } finally {
       setIsLoadingAudio(false);
     }
+  }, [sessionId, handleApiError, showNotification]);
+
+  const togglePlayPause = useCallback(() => {
+    if (!audio) {
+      loadAudio();
+      return;
+    }
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch((err) => {
+        handleApiError(err, "Failed to play audio");
+      });
+    }
+  }, [audio, isPlaying, loadAudio, handleApiError]);
+
+  const fetchSummaryById = useCallback(async () => {
+    if (!sessionId) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const data = await APIService.getSummaryById(sessionId);
+      if (data && typeof data === "object" && "summary_id" in data) {
+        setSummaryId(data);
+      } else {
+        setSummaryId(null);
+        handleApiError(new Error("Invalid summary data"), "Failed to fetch summary");
+      }
+    } catch (err) {
+      handleApiError(err, "Failed to fetch summary");
+    } finally {
+      setIsLoading(false);
+    }
   }, [sessionId, handleApiError]);
+
+  const upsertIcdSection = useCallback((baseText: string, section: string) => {
+    if (!section) return baseText;
+    const lines = baseText.split("\n");
+    const headerIndex = lines.findIndex((l) => /^##\s+ICD Codes\s*\(/.test(l));
+    if (headerIndex === -1) {
+      const needsNewline = baseText.endsWith("\n") ? "" : "\n";
+      return baseText + needsNewline + section;
+    }
+    let endIndex = lines.length;
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+      if (/^##\s+/.test(lines[i])) {
+        endIndex = i;
+        break;
+      }
+    }
+    const before = lines.slice(0, headerIndex).join("\n");
+    const after = lines.slice(endIndex).join("\n");
+    const mid = section.replace(/\n+$/, "");
+    const parts = [before, mid, after].filter((p) => p.length > 0);
+    return parts.join("\n") + (after ? "" : "\n");
+  }, []);
 
   useEffect(() => {
     loadAudio();
@@ -130,67 +181,9 @@ export default function SummaryGeneration({
     };
   }, [audio]);
 
-  const togglePlayPause = useCallback(() => {
-    if (!audio) {
-      loadAudio(); // Load if not loaded
-      return;
-    }
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play().catch((err) => {
-        handleApiError(err, "Failed to play audio");
-      });
-    }
-    // State update handled by event listeners
-  }, [audio, isPlaying, loadAudio, handleApiError]);
-
-  const fetchSummaryById = useCallback(async () => {
-    if (!sessionId) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      const data = await APIService.getSummaryById(sessionId);
-      if (data && typeof data === "object" && "summary_id" in data) {
-        setSummaryId(data);
-      } else {
-        setSummaryId(null);
-        handleApiError(new Error("Invalid summary data"), "Failed to fetch summary");
-      }
-    } catch (err) {
-      handleApiError(err, "Failed to fetch summary");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [sessionId, handleApiError]);
-
   useEffect(() => {
     fetchSummaryById();
   }, [fetchSummaryById]);
-
-  const upsertIcdSection = useCallback((baseText: string, section: string) => {
-    if (!section) return baseText;
-    const lines = baseText.split("\n");
-    const headerIndex = lines.findIndex((l) => /^##\s+ICD Codes\s*\(/.test(l));
-    if (headerIndex === -1) {
-      const needsNewline = baseText.endsWith("\n") ? "" : "\n";
-      return baseText + needsNewline + section;
-    }
-    let endIndex = lines.length;
-    for (let i = headerIndex + 1; i < lines.length; i++) {
-      if (/^##\s+/.test(lines[i])) {
-        endIndex = i;
-        break;
-      }
-    }
-    const before = lines.slice(0, headerIndex).join("\n");
-    const after = lines.slice(endIndex).join("\n");
-    const mid = section.replace(/\n+$/, "");
-    const parts = [before, mid, after].filter((p) => p.length > 0);
-    return parts.join("\n") + (after ? "" : "\n");
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -228,22 +221,6 @@ export default function SummaryGeneration({
     return () => window.removeEventListener("icdSelectionUpdated", handler as EventListener);
   }, [sessionId]);
 
-  const parseContentSections = (content: string) => {
-    if (!content) return [];
-    const sections = content.split(/(?=^#+ )/m).filter(section => section.trim());
-    return sections.map(section => {
-      const lines = section.trim().split('\n');
-      const headerLine = lines[0];
-      const contentLines = lines.slice(1);
-      const headerMatch = headerLine.match(/^(#+)\s*(.+)/);
-      if (!headerMatch) return null;
-      const level = headerMatch[1].length;
-      const title = headerMatch[2].trim();
-      const content = contentLines.join('\n').trim();
-      return { level, title, content };
-    }).filter(Boolean);
-  };
-
   useEffect(() => {
     if (!summaryId?.summary?.content) {
       setSummaryContent("Summary content not available.");
@@ -259,6 +236,29 @@ export default function SummaryGeneration({
       return upsertIcdSection(base || "", icdSectionText);
     });
   }, [isEdit, icdSectionText, summaryContent, upsertIcdSection]);
+
+  // Validate props after Hooks
+  if (!sessionId || !patientId || !transcriptionEnd || !summaryData) {
+    console.error("Missing required props in SummaryGeneration");
+    return <div>Error: Missing required props</div>;
+  }
+
+  // Rest of the component logic remains unchanged
+  const parseContentSections = (content: string) => {
+    if (!content) return [];
+    const sections = content.split(/(?=^#+ )/m).filter(section => section.trim());
+    return sections.map(section => {
+      const lines = section.trim().split('\n');
+      const headerLine = lines[0];
+      const contentLines = lines.slice(1);
+      const headerMatch = headerLine.match(/^(#+)\s*(.+)/);
+      if (!headerMatch) return null;
+      const level = headerMatch[1].length;
+      const title = headerMatch[2].trim();
+      const content = contentLines.join('\n').trim();
+      return { level, title, content };
+    }).filter(Boolean);
+  };
 
   const handleSaveEditedSummary = async () => {
     const resolvedSummaryId = summaryId?.summary_id ?? transcriptionEnd?.summary_id ?? summaryData?.summary_id;
@@ -466,7 +466,6 @@ export default function SummaryGeneration({
               </h1>
             </div>
             <div className="flex items-center space-x-2">
-              
               <button
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleDownloadRecording}
@@ -490,27 +489,27 @@ export default function SummaryGeneration({
           </div>
           <div>
             <button
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={togglePlayPause}
-                disabled={isLoadingAudio || isLoading}
-              >
-                {isLoadingAudio ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
-                    <span>Loading...</span>
-                  </>
-                ) : isPlaying ? (
-                  <>
-                    <Pause className="h-4 w-4 mr-2" />
-                    <span>Pause</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    <span>Play</span>
-                  </>
-                )}
-              </button>
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={togglePlayPause}
+              disabled={isLoadingAudio || isLoading}
+            >
+              {isLoadingAudio ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
+                  <span>Loading...</span>
+                </>
+              ) : isPlaying ? (
+                <>
+                  <Pause className="h-4 w-4 mr-2" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4 mr-2" />
+                  <span>Play</span>
+                </>
+              )}
+            </button>
           </div>
           <Image
             src="/audio-clip-illustrations.svg"
@@ -718,7 +717,6 @@ export default function SummaryGeneration({
           )}
         </div>
       </div>
-      {/* Hidden audio element for playback */}
       {audio && <audio ref={(el) => { if (el) el.src = audio.src; }} style={{ display: 'none' }} />}
     </>
   );
