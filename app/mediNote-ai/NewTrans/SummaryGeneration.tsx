@@ -55,6 +55,7 @@ export default function SummaryGeneration({
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
 
   // Define all Hooks first
   const handleApiError = useCallback(
@@ -117,6 +118,11 @@ export default function SummaryGeneration({
       const data = await APIService.getSummaryById(sessionId);
       if (data && typeof data === "object" && "summary_id" in data) {
         setSummaryId(data);
+        // Check if summary is already approved
+        if (data.approved_at) {
+          setIsApproved(true);
+          localStorage.setItem(`summaryApproved:${sessionId}`, 'true');
+        }
       } else {
         setSummaryId(null);
         handleApiError(new Error("Invalid summary data"), "Failed to fetch summary");
@@ -187,6 +193,12 @@ export default function SummaryGeneration({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Load approved status from localStorage
+    const savedApprovedStatus = localStorage.getItem(`summaryApproved:${sessionId}`);
+    if (savedApprovedStatus === 'true') {
+      setIsApproved(true);
+    }
 
     const initializeFromStorage = () => {
       try {
@@ -310,6 +322,8 @@ export default function SummaryGeneration({
     try {
       setIsLoading(true);
       await APIService.saveFinalSummary({ session_id: sessionId });
+      setIsApproved(true);
+      localStorage.setItem(`summaryApproved:${sessionId}`, 'true');
       showNotification("Summary approved successfully!");
     } catch (err) {
       handleApiError(err, "Failed to approve summary");
@@ -473,7 +487,7 @@ export default function SummaryGeneration({
               <button
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleDownloadRecording}
-                disabled={isDownloading || isLoading}
+                disabled={isDownloading || isLoading || isApproved}
               >
                 {isDownloading ? (
                   <>
@@ -495,7 +509,7 @@ export default function SummaryGeneration({
             <button
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={togglePlayPause}
-              disabled={isLoadingAudio || isLoading}
+              disabled={isLoadingAudio || isLoading || isApproved}
             >
               {isLoadingAudio ? (
                 <>
@@ -522,32 +536,13 @@ export default function SummaryGeneration({
             height={42}
           />
         </div>
-        {/* <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Patient Information</h2>
-          <div className="flex flex-wrap gap-3">
-            {[
-              { label: "Patient", value: patientName },
-              { label: "Symptoms", value: symptoms },
-              { label: "Duration", value: durationText },
-              { label: "Family History", value: familyHistory },
-              { label: "Next Steps", value: nextSteps },
-            ].map((chip, index) => (
-              <div
-                key={index}
-                className="flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-              >
-                <span className="font-medium mr-1">{chip.label}:</span>
-                <span>{chip.value || "Not specified"}</span>
-              </div>
-            ))}
-          </div>
-        </div> */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
             <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               onClick={() => setShowICDGenerator(!showICDGenerator)}
+              disabled={isLoading || isApproved}
             >
               ICD Code Generator
             </button>
@@ -560,6 +555,7 @@ export default function SummaryGeneration({
                   value={editedSummary || ""}
                   onChange={(e) => setEditedSummary(e.target.value)}
                   placeholder="Edit the summary here..."
+                  disabled={isApproved}
                 />
               ) : (
                 <div className="text-gray-700 text-sm leading-relaxed">
@@ -657,13 +653,13 @@ export default function SummaryGeneration({
             <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               onClick={handleApproveSummary}
-              disabled={isLoading}
+              disabled={isLoading || isApproved}
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               <span>Approve Summary</span>
             </button>
           )}
-          {!isEdit && (
+          {!isEdit && !isApproved && (
             <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               onClick={() => {
@@ -676,7 +672,7 @@ export default function SummaryGeneration({
                   }
                 } catch {}
               }}
-              disabled={isLoading}
+              disabled={isLoading || isApproved}
             >
               <Edit className="w-4 h-4 mr-2" />
               <span>Edit Summary</span>
@@ -686,7 +682,7 @@ export default function SummaryGeneration({
             <button
               className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
               onClick={handleSaveEditedSummary}
-              disabled={isLoading}
+              disabled={isLoading || isApproved}
             >
               <Save className="w-4 h-4 mr-2" />
               <span>Save Changes</span>
@@ -704,16 +700,16 @@ export default function SummaryGeneration({
                   }
                 } catch {}
               }}
-              disabled={isLoading}
+              disabled={isLoading || isApproved}
             >
               <span>Cancel</span>
             </button>
           )}
-          {!isEdit && (
+          {!isEdit && !isApproved && (
             <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               onClick={handleSaveSummary}
-              disabled={isLoading}
+              disabled={isLoading || isApproved}
             >
               <Save className="w-4 h-4 mr-2" />
               <span>Save for Later</span>

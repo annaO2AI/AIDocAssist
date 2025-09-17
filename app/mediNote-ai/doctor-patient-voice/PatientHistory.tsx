@@ -48,6 +48,7 @@ export default function PatientHistory({
   const [isEdit, setIsEdit] = useState(false)
   const [editedSession, setEditedSession] = useState<string | null>(null)
   const [editedHistory, setEditedHistory] = useState("")
+  const [isSummarySaved,setIsSummarySaved] = useState(false)
 
 
   const showNotification = (message: string) => {
@@ -122,6 +123,7 @@ export default function PatientHistory({
     try {
       setIsLoading(true)
       await APIService.saveFinalSummary({ session_id: sessionId })
+      setIsSummarySaved(true)
       showNotification("Summary Saved successfully!")
     } catch (err) {
       handleApiError(err, "Failed to approve summary")
@@ -213,6 +215,7 @@ export default function PatientHistory({
 
                           {!isEdit ? (
                             <div className="flex justify-end gap-2">
+                              {!isSummarySaved &&
                               <button
                                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                                 onClick={() => {
@@ -227,12 +230,13 @@ export default function PatientHistory({
                                 <Edit className="w-4 h-4 mr-2" />
                                 <span>Edit History</span>
                               </button>
+                              }
                               <button
                                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                                 onClick={() =>
                                   handleApproveSummary(Number(session?.session))
                                 }
-                                disabled={isLoading}
+                                disabled={isLoading || isSummarySaved}
                               >
                                 <Save className="w-4 h-4 mr-2" />
                                 <span>Save summary</span>
