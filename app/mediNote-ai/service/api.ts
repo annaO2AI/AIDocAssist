@@ -14,7 +14,8 @@ export class APIService {
       });
       
       if (!response?.ok) {
-        throw new Error(`Health check failed: ${response.status}`);      }
+        throw new Error(`Health check failed: ${response.status}`);
+      }
       return await response.json();
     } catch (error) {
       throw error;
@@ -47,52 +48,49 @@ export class APIService {
     return `${timestamp}${randomString}`;
   }
 
+  static async searchPatients(query: string): Promise<any> {
+    try {
+      const url = new URL(`${API_ROUTES.searchPatients}`);
+      url.searchParams.append('query', query);
 
-// services/api.ts
-static async searchPatients(query: string): Promise<any> {
-  try {
-    const url = new URL(`${API_ROUTES.searchPatients}`);
-    url.searchParams.append('query', query);
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+        },
+      });
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.log(errorData)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData)
+      }
+      return await response.json();
+    } catch (error) {
+      console.log('Search error:', error);
     }
-    return await response.json();
-  } catch (error) {
-    console.log('Search error:', error);
   }
-}
 
-static async startConversation(data:startConversationPayload): Promise<any>{
-try{
- const response = await fetch(`${API_BASE_URL_AISEARCH_MediNote}api/patients/${data?.patient_id}/start-conversation`, {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json', // Add this header
-      },
-      body: JSON.stringify(data) // This is correct - fetch will handle it
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.log(errorData)
+  static async startConversation(data:startConversationPayload): Promise<any>{
+    try{
+      const response = await fetch(`${API_BASE_URL_AISEARCH_MediNote}api/patients/${data?.patient_id}/start-conversation`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData)
+      }
+
+      return await response.json();
     }
-
-    return await response.json();
-}
-catch (error) {
-    console.error('Registration error:', error);
+    catch (error) {
+      console.error('Registration error:', error);
+    }
   }
-}
 
- // Search for doctors
   static async SearchDoctor(query: string): Promise<SearchDoctorsResponse> {
     try {
       const response = await fetch(`${API_SERVICE}/doctors/search?q=${encodeURIComponent(query)}`, {
@@ -113,7 +111,6 @@ catch (error) {
     }
   }
 
-  // Update doctor information
   static async updateDoctor(doctorData: DoctorCreationTypes, doctorId: number): Promise<UpdateDoctorResponse> {
     try {
       const response = await fetch(`${API_SERVICE}/doctors/update/${doctorId}`, {
@@ -135,8 +132,6 @@ catch (error) {
       throw error;
     }
   }
-
-
 
   static async createDoctor(doctorData: DoctorCreationTypes): Promise<CreateDoctorResponse> {
     try {
@@ -160,74 +155,72 @@ catch (error) {
     }
   }
 
+  static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/patients/create`, {
+        method: "POST",
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(patientData),
+      });
 
-static async registerPatient(patientData: PatientCreationTypes): Promise<any> {
-  try {
-    const response = await fetch(`${API_SERVICE}/patients/create`, {
-      method: "POST",
-      headers: {
-        'accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(patientData),
-    });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Registration failed');
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || 'Registration failed');
+      return await response.json();
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Registration error:', error);
-    throw error;
   }
-}
 
-static async SearchPatient(text:string | number | boolean): Promise<any> {
-  try {
-    const response = await fetch(`${API_SERVICE}/patients/search?query=${text}`, {
-      method: "GET",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-       credentials: 'include',
-    });
+  static async SearchPatient(text:string | number | boolean): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/patients/search?query=${text}`, {
+        method: "GET",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.log(errorData)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData)
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Registration error:', error);
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Registration error:', error);
   }
-}
 
-static async updatePatient(patientData: PatientCreationTypes, id:number): Promise<any> {
-  try {
-    const response = await fetch(`${API_SERVICE}/patients/update/${id}`, {
-      method: "PUT",
-      headers: {
-        'Content-Type': 'application/json', 
-      },
-      body: JSON.stringify(patientData) ,
-       credentials: 'include',
-    });
+  static async updatePatient(patientData: PatientCreationTypes, id:number): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/patients/update/${id}`, {
+        method: "PUT",
+        headers: {
+          'Content-Type': 'application/json', 
+        },
+        body: JSON.stringify(patientData) ,
+        credentials: 'include',
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.log(errorData)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData)
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Registration error:', error);
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Registration error:', error);
   }
-}
-
 
   static async enrollPatientVoice(id: number, audioFile: File): Promise<any> {
     try {
@@ -242,7 +235,6 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
         credentials: 'include',
         headers: {
           'accept': 'application/json',
-          // Do not set 'Content-Type' header; browser will set it automatically for FormData
         },
       });
 
@@ -256,7 +248,6 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-
   static async enrollDoctorVoice(id: number, audioFile: File): Promise<any> {
     try {
       const formData = new FormData();
@@ -264,7 +255,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
       const response = await fetch(`${API_SERVICE}/doctors/register_voice/${id}`, {
         method: "POST",
         body: formData,
-         credentials: 'include',
+        credentials: 'include',
       });
 
       if (!response?.ok) {
@@ -284,7 +275,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
         headers: {
           'Content-Type': 'application/json',
         },
-         credentials: 'include',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -305,7 +296,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
         headers: {
           'Content-Type': 'application/json',
         },
-         credentials: 'include',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -328,7 +319,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
         headers: {
           'accept': 'application/json',
         },
-         credentials: 'include',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -398,6 +389,7 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
       throw error;
     }
   }
+
   static async getSummaryById(sessionId: number): Promise<any> {
     try {
       const response = await fetch(`${API_SERVICE}/summary/summary/summary/get/${sessionId}`, {
@@ -446,34 +438,35 @@ static async updatePatient(patientData: PatientCreationTypes, id:number): Promis
     }
   }
 
-static async editSummary(data: {summaryId: number, edited_text: string}): Promise<any> {
-  try {
-    const url = `${API_SERVICE}/summary/summary/summary/edit/${data.summaryId}`;
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: {
-        'accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        summary_text: data.edited_text || ''
-      }),
-    });
+  static async editSummary(data: {summaryId: number, edited_text: string}): Promise<any> {
+    try {
+      const url = `${API_SERVICE}/summary/summary/summary/edit/${data.summaryId}`;
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          summary_text: data.edited_text || ''
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.log(errorData);
-      throw new Error(`Edit summary failed: ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Edit summary failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Edit summary error:', error);
+      throw error;
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Edit summary error:', error);
-    throw error;
   }
-}
-    static async generateSummary(full_text: string): Promise<any> {
+
+  static async generateSummary(full_text: string): Promise<any> {
     try {
       const response = await fetch(`${API_SERVICE}/summary/generate`, {
         method: "POST",
@@ -482,7 +475,7 @@ static async editSummary(data: {summaryId: number, edited_text: string}): Promis
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ full_text }),
-         credentials: 'include',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -497,40 +490,40 @@ static async editSummary(data: {summaryId: number, edited_text: string}): Promis
       throw error;
     }
   }
+
   static async getTranscript(sessionId: number): Promise<any> {
-  try {
-    const response = await fetch(
-      `${API_SERVICE}/session/transcript/${sessionId}`,
-      {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-        },
-        credentials: "include", // if your API uses cookies / auth
+    try {
+      const response = await fetch(
+        `${API_SERVICE}/session/transcript/${sessionId}`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Transcript fetch error data:', errorData);
+        throw new Error(`Transcript fetch failed: ${response.status}`);
       }
-    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.error('Transcript fetch error data:', errorData);
-      throw new Error(`Transcript fetch failed: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error("Transcript fetch error:", error);
+      throw error;
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Transcript fetch error:", error);
-    throw error;
   }
-}
 
-
-static async getPatientHistory(patientId: number): Promise<any> {
+  static async getPatientHistory(patientId: number): Promise<any> {
     const response = await fetch(`${API_SERVICE}/patients/history/${patientId}`, {
       method: 'GET',
       headers: {
         'accept': 'application/json'
       },
-       credentials: "include",
+      credentials: "include",
     });
     
     if (!response.ok) {
@@ -540,7 +533,7 @@ static async getPatientHistory(patientId: number): Promise<any> {
     return await response.json();
   }
 
-   static async transcribeFromFile(formData:any): Promise<any> {
+  static async transcribeFromFile(formData:any): Promise<any> {
     try {
       const response = await fetch(`${API_SERVICE}/transcribe/from-file`, {
         method: "POST",
@@ -563,6 +556,40 @@ static async getPatientHistory(patientId: number): Promise<any> {
       throw error;
     }
   }
+
+  static async downloadRecording(sessionId: string | number): Promise<{ blob: Blob, filename: string }> {
+    try {
+      const response = await fetch(
+        `${API_SERVICE}/api/recordings/${sessionId}/download`,
+        {
+          method: 'GET',
+          headers: {
+            'accept': 'audio/wav',
+          },
+          credentials: 'include',
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const blob = await response.blob()
+      
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = `session_${sessionId}_recording.wav`
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+
+      return { blob, filename }
+    } catch (error) {
+      console.error('Download recording error:', error)
+      throw error
+    }
+  }
 }
-
-

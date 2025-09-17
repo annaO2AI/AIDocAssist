@@ -1,12 +1,11 @@
-//PatientForm.tsx
-"use client" // Mark this as a Client Component
+"use client"
 
 import { useEffect, useState } from "react"
-import { PatientCreationTypes } from "../types"
-// import { APIService } from '../service/api';
+import { PatientCreationTypes, patient } from "../types"
 import { decodeJWT } from "@/app/utils/decodeJWT"
 import { APIService } from "../service/api"
 import Image from "next/image"
+import { PatientVoiceEnroll } from "../components/PatientVoiceEnroll"
 
 export default function PatientForm() {
   const [formData, setFormData] = useState<PatientCreationTypes>({
@@ -21,9 +20,8 @@ export default function PatientForm() {
   const [error, setError] = useState<string | null>(null)
   const [token, setToken] = useState<string>("")
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [registeredPatientId, setRegisteredPatientId] = useState<number | null>(
-    null
-  )
+  const [registeredPatientId, setRegisteredPatientId] = useState<number | null>(null)
+  const [showVoiceEnroll, setShowVoiceEnroll] = useState(false)
 
   useEffect(() => {
     const cookies = document.cookie.split(";").map((c) => c.trim())
@@ -72,6 +70,15 @@ export default function PatientForm() {
   const handleBackToForm = () => {
     setSuccessMessage(null)
     setError(null)
+    setShowVoiceEnroll(false)
+  }
+
+  const handleCloseVoiceEnroll = () => {
+    setShowVoiceEnroll(false)
+  }
+
+  const handleEnrollVoice = () => {
+    setShowVoiceEnroll(true)
   }
 
   return (
@@ -103,25 +110,31 @@ export default function PatientForm() {
               Patient registered successfully{" "}
             </h2>
 
-            {/* <div className=' m-auto text-center'>
-              <span className='font-bold'>Patient Name:</span>
-              <span className='ot-title'> David Brown</span>
-            </div> */}
             <div className="m-auto mb-2 text-center">
               <span className="font-bold ot-title">Patient ID:</span>
               <span className="ot-title"> {registeredPatientId}</span>
             </div>
 
-            <p className="text-sm mb-4 ot-title text-center osubtitle">
+            <p className="text-sm mb-6 ot-title text-center osubtitle">
               Thank you for your submission. We have received your information.
               Your patient profile has been created
             </p>
-            <button
-              onClick={handleBackToForm}
-              className="w-[250px] m-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-            >
-              Back to Patient Registration
-            </button>
+            
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleEnrollVoice}
+                className="w-[250px] m-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                Enroll Patient Voice
+              </button>
+              
+              <button
+                onClick={handleBackToForm}
+                className="w-[250px] m-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Back to Patient Registration
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -247,6 +260,15 @@ export default function PatientForm() {
           </form>
         )}
       </div>
+      
+      {/* Voice Enrollment Modal */}
+      {showVoiceEnroll && registeredPatientId && (
+        <PatientVoiceEnroll 
+          isOpen={showVoiceEnroll} 
+          onClose={handleCloseVoiceEnroll} 
+          id={registeredPatientId} 
+        />
+      )}
     </div>
   )
 }

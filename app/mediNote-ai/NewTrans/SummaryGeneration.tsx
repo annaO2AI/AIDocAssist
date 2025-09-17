@@ -1,36 +1,36 @@
-'use client'
+'use client';
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react";
 import {
   Play, Pause, Edit, CheckCircle,
   FileText, Calendar, User, Stethoscope, Save,
-} from "lucide-react"
-import { APIService } from "../service/api"
-import { TranscriptionSummary } from "../types"
-import { Summary } from "../transcription-summary/Summary"
+} from "lucide-react";
+import { APIService } from "../service/api";
+import { TranscriptionSummary } from "../types";
+import { Summary } from "../transcription-summary/Summary";
 import Image from 'next/image';
 
 type TextCase = {
-  sessionId: number
-  patientId: number
-  transcriptionEnd: TranscriptionSummary
-  summaryData: SummaryText
-  showICDGenerator: boolean
-  setShowICDGenerator: (show: boolean) => void
-}
+  sessionId: number;
+  patientId: number;
+  transcriptionEnd: TranscriptionSummary;
+  summaryData: SummaryText;
+  showICDGenerator: boolean;
+  setShowICDGenerator: (show: boolean) => void;
+};
 
 type SummaryText = {
-  success: boolean
-  session_id: number
-  summary_id: number
-  status: string
-  title: string
-  content: string
-  created_at: string
-  approved_at: string | null
-  file_path: string
-  summary: Summary
-}
+  success: boolean;
+  session_id: number;
+  summary_id: number;
+  status: string;
+  title: string;
+  content: string;
+  created_at: string;
+  approved_at: string | null;
+  file_path: string;
+  summary: Summary;
+};
 
 export default function SummaryGeneration({
   sessionId,
@@ -40,340 +40,411 @@ export default function SummaryGeneration({
   showICDGenerator,
   setShowICDGenerator,
 }: TextCase) {
-  const [apiError, setApiError] = useState("")
-  const [isEdit, setIsEdit] = useState(false)
-  const [editedSummary, setEditedSummary] = useState("")
-  const [icdSectionText, setIcdSectionText] = useState<string>("")
+  const [apiError, setApiError] = useState("");
+  const [isEdit, setIsEdit] = useState(false);
+  const [editedSummary, setEditedSummary] = useState("");
+  const [icdSectionText, setIcdSectionText] = useState<string>("");
   const [notification, setNotification] = useState<{ message: string; show: boolean }>({
     message: "",
     show: false,
-  })
-  const [summaryId, setSummaryId] = useState<SummaryText | null>(null)
-  const [summaryContent, setSummaryContent] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(true)
+  });
+  const [summaryId, setSummaryId] = useState<SummaryText | null>(null);
+  const [summaryContent, setSummaryContent] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+
+  // Validate props
+  if (!sessionId || !patientId || !transcriptionEnd || !summaryData) {
+    console.error("Missing required props in SummaryGeneration");
+    return <div>Error: Missing required props</div>;
+  }
 
   const handleApiError = useCallback(
     (error: unknown, context: string) => {
-      const message = error instanceof Error ? error.message : "An unknown error occurred"
-      setApiError(`${context}: ${message}`)
-      console.error(`${context} error:`, error)
+      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      setApiError(`${context}: ${message}`);
+      console.error(`${context} error:`, error);
     },
     []
-  )
+  );
 
   const showNotification = (message: string) => {
-    setNotification({ message, show: true })
-    setTimeout(() => setNotification({ message: "", show: false }), 3000)
-  }
+    setNotification({ message, show: true });
+    setTimeout(() => setNotification({ message: "", show: false }), 3000);
+  };
+
+  const loadAudio = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      setIsLoadingAudio(true);
+      const { blob, filename } = await APIService.downloadRecording(sessionId);
+      const audioUrl = URL.createObjectURL(blob);
+      const newAudio = new Audio(audioUrl);
+      newAudio.preload = 'metadata'; // Load metadata for duration, etc.
+      setAudio((prevAudio) => {
+        // Cleanup previous audio if exists
+        if (prevAudio && prevAudio.src) {
+          URL.revokeObjectURL(prevAudio.src);
+        }
+        return newAudio;
+      });
+      showNotification("Audio loaded successfully!");
+    } catch (err) {
+      handleApiError(err, "Failed to load audio");
+    } finally {
+      setIsLoadingAudio(false);
+    }
+  }, [sessionId, handleApiError]);
+
+  useEffect(() => {
+    loadAudio();
+  }, [loadAudio]);
+
+  useEffect(() => {
+    if (!audio) return;
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [audio]);
+
+  useEffect(() => {
+    return () => {
+      if (audio && audio.src) {
+        audio.pause();
+        URL.revokeObjectURL(audio.src);
+      }
+    };
+  }, [audio]);
+
+  const togglePlayPause = useCallback(() => {
+    if (!audio) {
+      loadAudio(); // Load if not loaded
+      return;
+    }
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch((err) => {
+        handleApiError(err, "Failed to play audio");
+      });
+    }
+    // State update handled by event listeners
+  }, [audio, isPlaying, loadAudio, handleApiError]);
 
   const fetchSummaryById = useCallback(async () => {
     if (!sessionId) {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
     try {
-      setIsLoading(true)
-      const data = await APIService.getSummaryById(sessionId)
-      if (data) setSummaryId(data)
+      setIsLoading(true);
+      const data = await APIService.getSummaryById(sessionId);
+      if (data && typeof data === "object" && "summary_id" in data) {
+        setSummaryId(data);
+      } else {
+        setSummaryId(null);
+        handleApiError(new Error("Invalid summary data"), "Failed to fetch summary");
+      }
     } catch (err) {
-      handleApiError(err, "Failed to fetch summary")
+      handleApiError(err, "Failed to fetch summary");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [sessionId, handleApiError])
+  }, [sessionId, handleApiError]);
 
   useEffect(() => {
-    fetchSummaryById()
-  }, [fetchSummaryById])
+    fetchSummaryById();
+  }, [fetchSummaryById]);
 
-  // Helper to upsert the ICD section into the editable summary text
   const upsertIcdSection = useCallback((baseText: string, section: string) => {
-    if (!section) return baseText
-    const lines = baseText.split("\n")
-    const headerIndex = lines.findIndex((l) => /^##\s+ICD Codes\s*\(/.test(l))
+    if (!section) return baseText;
+    const lines = baseText.split("\n");
+    const headerIndex = lines.findIndex((l) => /^##\s+ICD Codes\s*\(/.test(l));
     if (headerIndex === -1) {
-      // Append with spacing
-      const needsNewline = baseText.endsWith("\n") ? "" : "\n"
-      return baseText + needsNewline + section
+      const needsNewline = baseText.endsWith("\n") ? "" : "\n";
+      return baseText + needsNewline + section;
     }
-    // Replace section from headerIndex until next section header (## ...)
-    let endIndex = lines.length
+    let endIndex = lines.length;
     for (let i = headerIndex + 1; i < lines.length; i++) {
       if (/^##\s+/.test(lines[i])) {
-        endIndex = i
-        break
+        endIndex = i;
+        break;
       }
     }
-    const before = lines.slice(0, headerIndex).join("\n")
-    const after = lines.slice(endIndex).join("\n")
-    const mid = section.replace(/\n+$/, "") // avoid trailing extra newlines
-    const parts = [before, mid, after].filter((p) => p.length > 0)
-    return parts.join("\n") + (after ? "" : "\n")
-  }, [])
+    const before = lines.slice(0, headerIndex).join("\n");
+    const after = lines.slice(endIndex).join("\n");
+    const mid = section.replace(/\n+$/, "");
+    const parts = [before, mid, after].filter((p) => p.length > 0);
+    return parts.join("\n") + (after ? "" : "\n");
+  }, []);
 
-  // Listen for ICD selection updates and initialize from localStorage
   useEffect(() => {
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined") return;
 
     const initializeFromStorage = () => {
       try {
-        const raw = localStorage.getItem(`icdSelection:${sessionId}`)
-        if (!raw) return
-        const parsed = JSON.parse(raw) as { system?: string; items?: Array<{ code: string; title: string }>; updatedAt?: string }
+        const raw = localStorage.getItem(`icdSelection:${sessionId}`);
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as { system?: string; items?: Array<{ code: string; title: string }>; updatedAt?: string };
         if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0 && parsed.system) {
-          const header = `\n\n ICD Codes (${parsed.system})\n`
-          // Deduplicate by code
+          const header = `\n\nICD Codes (${parsed.system})\n`;
           const unique = parsed.items.reduce((acc: Array<{ code: string; title: string }>, it) => {
-            if (!acc.some((x) => x.code === it.code)) acc.push(it)
-            return acc
-          }, [])
-          const lines = unique.map((it) => `- ${it.code}: ${it.title}`).join("\n")
-          setIcdSectionText(header + lines + "\n")
+            if (!acc.some((x) => x.code === it.code)) acc.push(it);
+            return acc;
+          }, []);
+          const lines = unique.map((it) => `- ${it.code}: ${it.title}`).join("\n");
+          setIcdSectionText(header + lines + "\n");
         } else {
-          setIcdSectionText("")
+          setIcdSectionText("");
         }
       } catch {
         // noop
       }
-    }
+    };
 
-    initializeFromStorage()
+    initializeFromStorage();
 
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { sessionId: number; sectionText: string } | undefined
-      if (!detail || Number(detail.sessionId) !== Number(sessionId)) return
-      setIcdSectionText(detail.sectionText || "")
-    }
+      const detail = (e as CustomEvent).detail as { sessionId: number; sectionText: string } | undefined;
+      if (!detail || Number(detail.sessionId) !== Number(sessionId)) return;
+      setIcdSectionText(detail.sectionText || "");
+    };
 
-    window.addEventListener("icdSelectionUpdated", handler as EventListener)
-    return () => window.removeEventListener("icdSelectionUpdated", handler as EventListener)
-  }, [sessionId])
+    window.addEventListener("icdSelectionUpdated", handler as EventListener);
+    return () => window.removeEventListener("icdSelectionUpdated", handler as EventListener);
+  }, [sessionId]);
 
-  // Parse and format the entire content dynamically
   const parseContentSections = (content: string) => {
-    if (!content) return []
-    
-    const sections = content.split(/(?=^#+ )/m).filter(section => section.trim())
-    
+    if (!content) return [];
+    const sections = content.split(/(?=^#+ )/m).filter(section => section.trim());
     return sections.map(section => {
-      const lines = section.trim().split('\n')
-      const headerLine = lines[0]
-      const contentLines = lines.slice(1)
-      
-      const headerMatch = headerLine.match(/^(#+)\s*(.+)/)
-      if (!headerMatch) return null
-      
-      const level = headerMatch[1].length
-      const title = headerMatch[2].trim()
-      const content = contentLines.join('\n').trim()
-      
-      return { level, title, content }
-    }).filter(Boolean)
-  }
+      const lines = section.trim().split('\n');
+      const headerLine = lines[0];
+      const contentLines = lines.slice(1);
+      const headerMatch = headerLine.match(/^(#+)\s*(.+)/);
+      if (!headerMatch) return null;
+      const level = headerMatch[1].length;
+      const title = headerMatch[2].trim();
+      const content = contentLines.join('\n').trim();
+      return { level, title, content };
+    }).filter(Boolean);
+  };
 
   useEffect(() => {
     if (!summaryId?.summary?.content) {
-      setSummaryContent("Summary content not available.")
-      return
+      setSummaryContent("Summary content not available.");
+      return;
     }
+    setSummaryContent(summaryId.summary.content);
+  }, [summaryId]);
 
-    setSummaryContent(summaryId.summary.content)
-  }, [summaryId])
-
-  // When entering edit mode or ICD section changes, ensure the ICD section is present in the edited text
   useEffect(() => {
-    if (!isEdit) return
+    if (!isEdit) return;
     setEditedSummary((current) => {
-      const base = current && current.trim().length > 0 ? current : summaryContent
-      return upsertIcdSection(base || "", icdSectionText)
-    })
-  }, [isEdit, icdSectionText, summaryContent, upsertIcdSection])
+      const base = current && current.trim().length > 0 ? current : summaryContent;
+      return upsertIcdSection(base || "", icdSectionText);
+    });
+  }, [isEdit, icdSectionText, summaryContent, upsertIcdSection]);
 
   const handleSaveEditedSummary = async () => {
-    // Prefer summary_id from fetched summary; fallback to props if available
-    const resolvedSummaryId = summaryId?.summary_id ?? transcriptionEnd?.summary_id ?? summaryData?.summary_id
+    const resolvedSummaryId = summaryId?.summary_id ?? transcriptionEnd?.summary_id ?? summaryData?.summary_id;
     if (!resolvedSummaryId) {
-      handleApiError(new Error("summary_id not available"), "Cannot update summary")
-      return
+      handleApiError(new Error("summary_id not available"), "Cannot update summary");
+      return;
     }
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       await APIService.editSummary({
         summaryId: resolvedSummaryId,
         edited_text: editedSummary || summaryContent,
-      })
-      setSummaryContent(editedSummary || summaryContent)
-      setIsEdit(false)
-      showNotification("Summary updated successfully!")
-      // Broadcast edit mode off for ICD selector consumers
+      });
+      setSummaryContent(editedSummary || summaryContent);
+      setIsEdit(false);
+      showNotification("Summary updated successfully!");
       try {
         if (typeof window !== "undefined") {
-          localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false")
-          window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }))
+          localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false");
+          window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }));
         }
       } catch {}
     } catch (err) {
-      handleApiError(err, "Failed to update summary")
+      handleApiError(err, "Failed to update summary");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSaveSummary = async () => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       await APIService.saveSummary({
         doctor_id: 1,
         patient_id: patientId,
         session_id: sessionId,
         original_text: summaryContent,
         summary_text: editedSummary,
-      })
-      showNotification("Summary saved successfully!")
+      });
+      showNotification("Summary saved successfully!");
     } catch (err) {
-      handleApiError(err, "Failed to save summary")
+      handleApiError(err, "Failed to save summary");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleApproveSummary = async () => {
     try {
-      setIsLoading(true)
-      await APIService.saveFinalSummary({ session_id: sessionId })
-      showNotification("Summary approved successfully!")
+      setIsLoading(true);
+      await APIService.saveFinalSummary({ session_id: sessionId });
+      showNotification("Summary approved successfully!");
     } catch (err) {
-      handleApiError(err, "Failed to approve summary")
+      handleApiError(err, "Failed to approve summary");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Updated helper for cleaning and structuring bullets
   const processDoctorInsights = (bullets: string[] = []) => {
     const clean = (str: string) => {
       return str
         .replace(/[*#]+/g, "")
         .replace(/^-\s*/, "")
         .replace(/^\w+\s*-\s*/, "")
-        .trim()
-    }
-    
+        .trim();
+    };
     const sections: Record<string, string[]> = {
       Treatment: [],
       Instructions: [],
       General: [],
-    }
-    
+    };
     bullets.forEach((text) => {
-      const cleanText = clean(text)
+      const cleanText = clean(text);
       if (cleanText) {
         if (/treatment|therapy|medication|administered/i.test(text)) {
-          sections.Treatment.push(cleanText)
+          sections.Treatment.push(cleanText);
         } else if (/instruction|education|precaution/i.test(text)) {
-          sections.Instructions.push(cleanText)
+          sections.Instructions.push(cleanText);
         } else {
-          sections.General.push(cleanText)
+          sections.General.push(cleanText);
         }
       }
-    })
-    
-    return sections
-  }
+    });
+    return sections;
+  };
 
-  // Updated patient insights processing
   const processPatientInsights = (bullets: string[] = []) => {
-    return bullets.map(bullet => 
-      bullet
-        .replace(/[*#]+/g, "")
-        .replace(/^-\s*/, "")
-        .replace(/^\w+\s*Summary\s*-\s*/i, "")
-        .trim()
-    ).filter(bullet => bullet.length > 0)
-  }
+    return bullets
+      .map(bullet =>
+        bullet
+          .replace(/[*#]+/g, "")
+          .replace(/^-\s*/, "")
+          .replace(/^\w+\s*Summary\s*-\s*/i, "")
+          .trim()
+      )
+      .filter(bullet => bullet.length > 0);
+  };
 
-  // Render formatted content sections
   const renderContentSections = (content: string) => {
-    const sections = parseContentSections(content)
-    
+    const sections = parseContentSections(content || "");
     return sections.map((section, index) => {
-      if (!section) return null
-      
-      const { level, title, content: sectionContent } = section
-      
+      if (!section) return null;
+      const { level, title, content: sectionContent } = section;
       const formatContent = (text: string) => {
-        const lines = text.split('\n').filter(line => line.trim())
-        
+        const lines = text.split('\n').filter(line => line.trim());
         return lines.map((line, lineIndex) => {
-          const trimmed = line.trim()
-          if (!trimmed) return null
-          
+          const trimmed = line.trim();
+          if (!trimmed) return null;
           if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
-            const bulletText = trimmed.replace(/^[-•]\s*/, '').trim()
+            const bulletText = trimmed.replace(/^[-•]\s*/, '').trim();
             return (
               <li key={lineIndex} className="text-gray-700 text-sm leading-relaxed ml-4 mb-1">
                 {bulletText}
               </li>
-            )
+            );
           }
-          
           return (
             <p key={lineIndex} className="text-gray-700 text-sm leading-relaxed mb-2">
               {trimmed}
             </p>
-          )
-        }).filter(Boolean)
-      }
-      
-      const HeaderTag = level === 1 ? 'h2' : 'h3'
-      const headerClass = level === 1 
-        ? 'text-lg font-semibold text-gray-900 mb-3 mt-6 first:mt-0' 
-        : 'text-md font-medium text-gray-800 mb-2 mt-4'
-      
+          );
+        }).filter(Boolean);
+      };
+      const HeaderTag = level === 1 ? 'h2' : 'h3';
+      const headerClass = level === 1
+        ? 'text-lg font-semibold text-gray-900 mb-3 mt-6 first:mt-0'
+        : 'text-md font-medium text-gray-800 mb-2 mt-4';
       return (
         <div key={index} className="mb-4">
-          <HeaderTag className={headerClass}>
-            {title}
-          </HeaderTag>
+          <HeaderTag className={headerClass}>{title}</HeaderTag>
           <div className="pl-2">
             {sectionContent.includes('-') || sectionContent.includes('•') ? (
-              <ul className="list-none space-y-1">
-                {formatContent(sectionContent)}
-              </ul>
+              <ul className="list-none space-y-1">{formatContent(sectionContent)}</ul>
             ) : (
               <div>{formatContent(sectionContent)}</div>
             )}
           </div>
         </div>
-      )
-    })
-  }
+      );
+    });
+  };
 
-  // Safely access nested fields with fallback defaults
-  const patientName = summaryId?.summary?.ui?.chips?.[0]?.value ?? "Patient"
-  const symptoms = summaryId?.summary?.ui?.chips?.[1]?.value ?? "Not specified"
-  const durationText = summaryId?.summary?.ui?.chips?.[2]?.value ?? "Not specified"
-  const familyHistory = summaryId?.summary?.ui?.chips?.[3]?.value ?? "Not specified"
-  const nextSteps = summaryId?.summary?.ui?.chips?.[4]?.value?.replace(/\*\*/g, "") ?? ""
-  const doctorName = summaryId?.summary?.ui?.insights?.doctor?.by ?? "Doctor"
-  const doctorBullets = summaryId?.summary?.ui?.insights?.doctor?.bullets ?? []
-  const structuredInsights = processDoctorInsights(doctorBullets)
-  const patientBullets = summaryId?.summary?.ui?.insights?.patient?.bullets ?? []
-  const processedPatientInsights = processPatientInsights(patientBullets)
-  const followupNote = summaryId?.summary?.ui?.followup?.note?.replace(/\*\*/g, "") ?? ""
-  const followupDate = summaryId?.summary?.ui?.followup?.date ?? "To be scheduled"
+  const patientName = summaryId?.summary?.ui?.chips?.[0]?.value ?? "Patient";
+  const symptoms = summaryId?.summary?.ui?.chips?.[1]?.value ?? "Not specified";
+  const durationText = summaryId?.summary?.ui?.chips?.[2]?.value ?? "Not specified";
+  const familyHistory = summaryId?.summary?.ui?.chips?.[3]?.value ?? "Not specified";
+  const nextSteps = summaryId?.summary?.ui?.chips?.[4]?.value?.replace(/\*\*/g, "") ?? "";
+  const doctorName = summaryId?.summary?.ui?.insights?.doctor?.by ?? "Doctor";
+  const doctorBullets = summaryId?.summary?.ui?.insights?.doctor?.bullets ?? [];
+  const structuredInsights = processDoctorInsights(doctorBullets);
+  const patientBullets = summaryId?.summary?.ui?.insights?.patient?.bullets ?? [];
+  const processedPatientInsights = processPatientInsights(patientBullets);
+  const followupNote = summaryId?.summary?.ui?.followup?.note?.replace(/\*\*/g, "") ?? "";
+  const followupDate = summaryId?.summary?.ui?.followup?.date ?? "To be scheduled";
 
   const Loader = () => (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75 z-50">
       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
     </div>
-  )
+  );
+
+  const handleDownloadRecording = async () => {
+    try {
+      setIsDownloading(true);
+      const { blob, filename } = await APIService.downloadRecording(sessionId);
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || `Patient-${patientName.replace("#", "")}.wav`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      showNotification("Recording downloaded successfully!");
+    } catch (err) {
+      handleApiError(err, "Failed to download recording");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <>
       {isLoading && <Loader />}
       <div className={`w-full mt-6 mx-auto bg-gray-50 min-h-screen rounded-lg mediNote-widthfix ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
-        {/* Notification */}
         {notification.show && (
           <div className="fixed top-4 right-4 z-50">
             <div className="flex items-center bg-green-500 text-white text-sm font-bold px-4 py-3 rounded-md shadow-lg">
@@ -382,8 +453,6 @@ export default function SummaryGeneration({
             </div>
           </div>
         )}
-
-        {/* Header */}
         <div className="bg-white rounded-lg p-6 mb-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
@@ -396,6 +465,52 @@ export default function SummaryGeneration({
                 Patient-{patientName.replace("#", "")}.mp3
               </h1>
             </div>
+            <div className="flex items-center space-x-2">
+              
+              <button
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleDownloadRecording}
+                disabled={isDownloading || isLoading}
+              >
+                {isDownloading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Download</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          <div>
+            <button
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={togglePlayPause}
+                disabled={isLoadingAudio || isLoading}
+              >
+                {isLoadingAudio ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : isPlaying ? (
+                  <>
+                    <Pause className="h-4 w-4 mr-2" />
+                    <span>Pause</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    <span>Play</span>
+                  </>
+                )}
+              </button>
           </div>
           <Image
             src="/audio-clip-illustrations.svg"
@@ -404,8 +519,6 @@ export default function SummaryGeneration({
             height={42}
           />
         </div>
-
-        {/* Chips Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Patient Information</h2>
           <div className="flex flex-wrap gap-3">
@@ -426,12 +539,10 @@ export default function SummaryGeneration({
             ))}
           </div>
         </div>
-
-        {/* Summary Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
-            <button 
+            <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               onClick={() => setShowICDGenerator(!showICDGenerator)}
             >
@@ -443,7 +554,7 @@ export default function SummaryGeneration({
               {isEdit ? (
                 <textarea
                   className="w-full h-96 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none"
-                  value={editedSummary}
+                  value={editedSummary || ""}
                   onChange={(e) => setEditedSummary(e.target.value)}
                   placeholder="Edit the summary here..."
                 />
@@ -452,12 +563,12 @@ export default function SummaryGeneration({
                   {summaryContent === "Summary content not available." ? (
                     <p>{summaryContent}</p>
                   ) : (
-                    renderContentSections(summaryContent)
+                    renderContentSections(summaryContent || "")
                   )}
                 </div>
               )}
             </div>
-            <div className="w-[300px] flex  flex-col items-center justify-center">
+            <div className="w-[300px] flex flex-col items-center justify-center">
               <Image
                 src="/summary-docter-petiont.svg"
                 alt="Doctor-Patient Illustration"
@@ -468,10 +579,7 @@ export default function SummaryGeneration({
             </div>
           </div>
         </div>
-
-        {/* Insights & Follow-up Section */}
         <div className="grid md:grid-cols-2 gap-6 mb-6">
-          {/* Doctor Call Insights */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-start space-x-3">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -499,8 +607,6 @@ export default function SummaryGeneration({
               </div>
             </div>
           </div>
-
-          {/* Patient Call Insights */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-start space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -522,8 +628,6 @@ export default function SummaryGeneration({
             </div>
           </div>
         </div>
-
-        {/* Follow-up Appointment */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-start space-x-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center">
@@ -545,8 +649,6 @@ export default function SummaryGeneration({
             </div>
           </div>
         </div>
-
-        {/* Action Buttons */}
         <div className="flex justify-center space-x-4 mt-8 mb-8">
           {!isEdit && (
             <button
@@ -558,18 +660,16 @@ export default function SummaryGeneration({
               <span>Approve Summary</span>
             </button>
           )}
-          
           {!isEdit && (
             <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               onClick={() => {
-                setIsEdit(true)
-                setEditedSummary(summaryContent)
-                // Broadcast edit mode so ICD selector allows selection
+                setIsEdit(true);
+                setEditedSummary(summaryContent);
                 try {
                   if (typeof window !== "undefined") {
-                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "true")
-                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: true } }))
+                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "true");
+                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: true } }));
                   }
                 } catch {}
               }}
@@ -579,7 +679,6 @@ export default function SummaryGeneration({
               <span>Edit Summary</span>
             </button>
           )}
-
           {isEdit && (
             <button
               className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
@@ -590,17 +689,15 @@ export default function SummaryGeneration({
               <span>Save Changes</span>
             </button>
           )}
-
           {isEdit && (
             <button
               className="flex items-center px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
               onClick={() => {
-                setIsEdit(false)
-                // Broadcast edit mode off
+                setIsEdit(false);
                 try {
                   if (typeof window !== "undefined") {
-                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false")
-                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }))
+                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false");
+                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }));
                   }
                 } catch {}
               }}
@@ -609,7 +706,6 @@ export default function SummaryGeneration({
               <span>Cancel</span>
             </button>
           )}
-
           {!isEdit && (
             <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
@@ -620,9 +716,10 @@ export default function SummaryGeneration({
               <span>Save for Later</span>
             </button>
           )}
-          
         </div>
       </div>
+      {/* Hidden audio element for playback */}
+      {audio && <audio ref={(el) => { if (el) el.src = audio.src; }} style={{ display: 'none' }} />}
     </>
-  )
+  );
 }
