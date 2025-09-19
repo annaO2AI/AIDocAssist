@@ -1,6 +1,7 @@
 export { default as HomeIcon } from './HomeIcon';
 export { default as SearchHistoryIcon } from './SearchHistoryIcon';
 export { default as LoganimationsIcon } from './LoganimationsIcon';
+export { default as LoganimationsIconWhite } from './LoganimationsIconWhite';
 export { default as AttachemntIcon } from './AttachemntIcon';
 export { default as SendIcon } from './SendIcon';
 export { default as AIsearchIcon } from './AIsearchIcon';

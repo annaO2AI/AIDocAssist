@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
-  Play, Pause, Edit, CheckCircle,
+  Play, Pause, Edit, CheckCircle, SkipBack, SkipForward,
   FileText, Calendar, User, Stethoscope, Save,
 } from "lucide-react";
 import { APIService } from "../service/api";
@@ -52,10 +52,23 @@ export default function SummaryGeneration({
   const [summaryContent, setSummaryContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  // Generate fixed waveform heights (shared for gray and blue)
+  const waveformHeights = useRef<number[]>([]);
+  useEffect(() => {
+    if (waveformHeights.current.length === 0) {
+      waveformHeights.current = Array.from({ length: 25 }).map(() => Math.random() * 20 + 8);
+    }
+  }, []);
 
   // Define all Hooks first
   const handleApiError = useCallback(
@@ -78,35 +91,81 @@ export default function SummaryGeneration({
       setIsLoadingAudio(true);
       const { blob, filename } = await APIService.downloadRecording(sessionId);
       const audioUrl = URL.createObjectURL(blob);
-      const newAudio = new Audio(audioUrl);
-      newAudio.preload = 'metadata';
-      setAudio((prevAudio) => {
-        if (prevAudio && prevAudio.src) {
-          URL.revokeObjectURL(prevAudio.src);
-        }
-        return newAudio;
-      });
+      
+      // Set the audio URL to the state
+      setAudioUrl(audioUrl);
+      setIsLoadingAudio(false);
+      
+      // Get audio element and set metadata listener
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.load();
+        
+        audioRef.current.addEventListener('loadedmetadata', () => {
+          if (audioRef.current) {
+            setDuration(audioRef.current.duration || 125);
+          }
+        }, { once: true });
+      }
+      
       showNotification("Audio loaded successfully!");
     } catch (err) {
       handleApiError(err, "Failed to load audio");
-    } finally {
       setIsLoadingAudio(false);
     }
   }, [sessionId, handleApiError, showNotification]);
 
   const togglePlayPause = useCallback(() => {
-    if (!audio) {
+    if (!audioRef.current) {
       loadAudio();
       return;
     }
+    
     if (isPlaying) {
-      audio.pause();
+      audioRef.current.pause();
     } else {
-      audio.play().catch((err) => {
+      audioRef.current.play().catch((err) => {
         handleApiError(err, "Failed to play audio");
       });
     }
-  }, [audio, isPlaying, loadAudio, handleApiError]);
+  }, [isPlaying, loadAudio, handleApiError]);
+
+  const handleSkipBackward = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+    }
+  }, []);
+
+  const handleSkipForward = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 10);
+    }
+  }, [duration]);
+
+  const handleTimeUpdate = useCallback(() => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      setProgress((audioRef.current.currentTime / duration) * 100);
+    }
+  }, [duration]);
+
+  const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !progressRef.current || duration === 0) return;
+    
+    const rect = progressRef.current.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const newTime = Math.max(0, Math.min(duration, percent * duration));
+    
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+    setProgress(percent * 100);
+  }, [duration]);
+
+  const formatTime = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   const fetchSummaryById = useCallback(async () => {
     if (!sessionId) {
@@ -161,31 +220,45 @@ export default function SummaryGeneration({
   }, [loadAudio]);
 
   useEffect(() => {
+    const audio = audioRef.current;
     if (!audio) return;
 
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
-    const handleEnded = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setProgress(0);
+    };
+    const handleLoadedData = () => {
+      if (audio.duration) {
+        setDuration(audio.duration);
+      }
+    };
 
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadeddata', handleLoadedData);
 
     return () => {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadeddata', handleLoadedData);
     };
-  }, [audio]);
+  }, [handleTimeUpdate]);
 
+  // Cleanup audio URL on unmount
   useEffect(() => {
     return () => {
-      if (audio && audio.src) {
-        audio.pause();
-        URL.revokeObjectURL(audio.src);
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
       }
     };
-  }, [audio]);
+  }, [audioUrl]);
 
   useEffect(() => {
     fetchSummaryById();
@@ -462,7 +535,7 @@ export default function SummaryGeneration({
   return (
     <>
       {isLoading && <Loader />}
-      <div className={`w-full mt-6 mx-auto bg-gray-50 min-h-screen rounded-lg mediNote-widthfix ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`w-full mt-12 p-16 mx-auto bg-gray-50 min-h-screen rounded-lg summaryGenerationSection relative ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
         {notification.show && (
           <div className="fixed top-4 right-4 z-50">
             <div className="flex items-center bg-green-500 text-white text-sm font-bold px-4 py-3 rounded-md shadow-lg">
@@ -471,15 +544,15 @@ export default function SummaryGeneration({
             </div>
           </div>
         )}
-        <div className="bg-white rounded-lg p-6 mb-6 shadow-sm">
+        <div className="rounded-lg mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center">
                 <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M5 8.8421C6.18575 8.8421 7.14283 7.85471 7.14283 6.6316V2.21053C7.14283 0.987368 6.18575 0 5 0C3.81425 0 2.85714 0.987368 2.85714 2.21053V6.6316C2.85714 7.85471 3.81425 8.8421 5 8.8421ZM4.28575 2.21053C4.28575 1.80527 4.60717 1.47369 5 1.47369C5.39283 1.47369 5.71425 1.80527 5.71425 2.21053V6.6316C5.71425 7.04423 5.4 7.3684 5 7.3684C4.60717 7.3684 4.28575 7.03684 4.28575 6.6316V2.21053ZM8.78575 6.6316H10C10 9.14418 8.05717 11.2221 5.71425 11.5832V14H4.28575V11.5832C1.94286 11.2221 0 9.14418 0 6.6316H1.21428C1.21428 8.8421 3.02858 10.3895 5 10.3895C6.97142 10.3895 8.78575 8.8421 8.78575 6.6316Z" fill="#34334B"/>
+                  <path fillRule="evenodd" clipRule="evenodd" d="M5 8.8421C6.18575 8.8421 7.14283 7.85471 7.14283 6.6316V2.21053C7.14283 0.987368 6.18575 0 5 0C3.81425 0 2.85714 0.987368 2.85714 2.21053V6.6316C2.85714 7.85471 3.81425 8.8421 5 8.8421ZM4.28575 2.21053C4.28575 1.80527 4.60717 1.47369 5 1.47369C5.39283 1.47369 5.71425 1.80527 5.71425 2.21053V6.6316C5.71425 7.04423 5.4 7.3684 5 7.3684C4.60717 7.3684 4.28575 7.03684 4.28575 6.6316V2.21053ZM8.78575 6.6316H10C10 9.14418 8.05717 11.2221 5.71425 11.5832V14H4.28575V11.5832C1.94286 11.2221 0 9.14418 0 6.6316H1.21428C1.21428 8.8421 3.02858 10.3895 5 10.3895C6.97142 10.3895 8.78575 8.8421 8.78575 6.6316Z" fill="#fff"/>
                 </svg>
               </div>
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold text-gray-900 text-white">
                 Patient-{patientName.replace("#", "")}.mp3
               </h1>
             </div>
@@ -505,38 +578,118 @@ export default function SummaryGeneration({
               </button>
             </div>
           </div>
-          <div>
-            <button
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={togglePlayPause}
-              disabled={isLoadingAudio || isLoading || isApproved}
-            >
-              {isLoadingAudio ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
-                  <span>Loading...</span>
-                </>
-              ) : isPlaying ? (
-                <>
-                  <Pause className="h-4 w-4 mr-2" />
-                  <span>Pause</span>
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  <span>Play</span>
-                </>
-              )}
-            </button>
+          
+          {/* Enhanced horizontal audio player with layered waveform */}
+          <div className="relative w-full max-w-2xl mb-6">
+            <div className="relative rounded-full overflow-hidden flex items-center px-2 py-2 border border-white">
+              {/* Control Buttons */}
+              <div className="flex items-center space-x-2 mr-3">
+                {/* Backward 10s */}
+                {/* <button
+                  className="p-2 text-white/70 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleSkipBackward}
+                  disabled={isLoadingAudio || isLoading || isApproved}
+                  title="Rewind 10 seconds"
+                >
+                  <SkipBack className="h-4 w-4" />
+                </button> */}
+                
+                {/* Play/Pause Button */}
+                <button
+                  className={`relative flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm transition-all duration-200 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isLoadingAudio ? 'animate-pulse' : ''
+                  }`}
+                  onClick={togglePlayPause}
+                  disabled={isLoadingAudio || isLoading || isApproved}
+                  title={isPlaying ? "Pause" : "Play"}
+                >
+                  {isLoadingAudio ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                  ) : isPlaying ? (
+                    <Pause className="h-5 w-5 text-white" />
+                  ) : (
+                    <Play className="h-5 w-5 text-white ml-0.5" />
+                  )}
+                </button>
+                
+                {/* Forward 10s */}
+                {/* <button
+                  className="p-2 text-white/70 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleSkipForward}
+                  disabled={isLoadingAudio || isLoading || isApproved}
+                  title="Fast forward 10 seconds"
+                >
+                  <SkipForward className="h-4 w-4" />
+                </button> */}
+              </div>
+              
+              {/* Layered Waveform Visualization */}
+              <div className="relative flex-1 h-6 mx-2 overflow-hidden">
+                {/* Gray background waveform - full length */}
+                <div className="absolute inset-0 flex items-center space-x-0.5">
+                  {waveformHeights.current.map((height, i) => (
+                    <div
+                      key={`gray-${i}`}
+                      className="w-0.5 bg-blue-300 rounded-full opacity-[.37]"
+                      style={{ height: `${height}px` }}
+                    />
+                  ))}
+                </div>
+                
+                {/* Blue highlight waveform - increases with progress */}
+                <div 
+                  className="absolute inset-0 flex items-center space-x-0.5 overflow-hidden"
+                  style={{ width: `${progress}%` }}
+                >
+                  <div className="flex items-center space-x-0.5">
+                    {waveformHeights.current.map((height, i) => (
+                      <div
+                        key={`blue-${i}`}
+                        className={`w-0.5 bg-blue-200 rounded-full transition-all duration-300 ease-in-out ${
+                          isPlaying ? 'animate-pulse' : ''
+                        }`}
+                        style={{ height: `${height}px` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Progress Bar with Click-to-Seek */}
+              <div className="flex items-center space-x-2 mx-3" ref={progressRef}>
+                <div className="w-16 text-white text-xs font-medium text-left min-w-[3.5rem]">
+                  {formatTime(currentTime)}
+                </div>
+                
+                <div 
+                  className="flex-1 h-1.5 bg-white/30 rounded-full cursor-pointer relative group"
+                  onClick={handleSeek}
+                >
+                  <div 
+                    className={`h-full bg-white/80 rounded-full transition-all duration-300 ease-linear relative overflow-hidden ${
+                      isPlaying ? 'animate-pulse' : ''
+                    }`}
+                    style={{ width: `${progress}%` }}
+                  >
+                    {/* Thumb indicator */}
+                    <div className="absolute top-1/2 -translate-y-1/2 right-0 w-2 h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                  </div>
+                </div>
+                
+                <div className="w-10 text-white text-xs font-medium text-right min-w-[2.5rem]">
+                  {formatTime(duration)}
+                </div>
+              </div>
+            </div>
           </div>
-          <Image
+          {/* <Image
             src="/audio-clip-illustrations.svg"
             alt="Audio Clip Illustration"
             width={449}
             height={42}
-          />
+          /> */}
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="rounded-lg shadow-sm p-6 mb-6 bg-white ">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
             <button
@@ -627,7 +780,7 @@ export default function SummaryGeneration({
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="rounded-lg shadow-sm p-6 mb-6 follow-upAppointment-gradiant">
           <div className="flex items-start space-x-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center">
               <Image
@@ -648,7 +801,7 @@ export default function SummaryGeneration({
             </div>
           </div>
         </div>
-        <div className="flex justify-center space-x-4 mt-8 mb-8">
+        <div className="flex justify-center space-x-4 mt-8 mb-8 relative  z-[1]">
           {!isEdit && (
             <button
               className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
@@ -716,8 +869,46 @@ export default function SummaryGeneration({
             </button>
           )}
         </div>
+         <span className="bottomlinerGrading">
+              <svg width="289" height="199" viewBox="0 0 289 199" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M74.4604 14.9961C29.4945 21.2278 -3.5762 38.2063 -12.2914 45.6118L-26.7382 51.5987L-18.129 238.328L15.9938 288.05L59.727 287.301L185.831 257.872C186.478 228.034 237.253 176.817 262.56 154.938C307.047 107.868 284.151 58.3168 267.142 39.4252C236.04 -2.0024 184.942 -2.74081 158.943 2.76831C155.608 3.47505 152.272 4.08963 148.876 4.38837C134.405 5.6613 97.5463 9.50809 74.4604 14.9961Z" fill="url(#paint0_linear_3427_90583)" fillOpacity="0.4"/>
+              <defs>
+              <linearGradient id="paint0_linear_3427_90583" x1="307.848" y1="2.45841" x2="-6.38578" y2="289.124" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#45CEF1"/>
+              <stop offset="1" stopColor="#219DF1"/>
+              </linearGradient>
+              </defs>
+              </svg>
+
+         </span>
+         <span className="rightlinerGrading">
+         <svg width="461" height="430" viewBox="0 0 461 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M261.412 0C341.45 8.67863e-05 413.082 35.9951 461.001 92.6807V429.783C460.94 429.856 460.878 429.928 460.816 430H289.244C370.46 416.708 432.435 346.208 432.435 261.232C432.435 166.779 355.865 90.2101 261.412 90.21C166.959 90.21 90.3887 166.779 90.3887 261.232C90.3887 346.208 152.364 416.707 233.579 430H62.0068C23.4388 384.476 0.179688 325.571 0.179688 261.232C0.179741 116.958 117.137 0 261.412 0Z" fill="#C2F5F9" fillOpacity="0.2"/>
+        </svg>
+        </span>
       </div>
-      {audio && <audio ref={(el) => { if (el) el.src = audio.src; }} style={{ display: 'none' }} />}
+      
+      {/* Properly connected audio element */}
+        {audioUrl && (
+            <audio 
+              ref={audioRef}
+              src={audioUrl}
+              preload="metadata"
+              style={{ display: 'none' }}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => {
+                setIsPlaying(false);
+                setCurrentTime(0);
+                setProgress(0);
+              }}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={(e) => {
+                const target = e.target as HTMLAudioElement;
+                setDuration(target.duration || 0);
+              }}
+            />
+          )}
     </>
   );
 }

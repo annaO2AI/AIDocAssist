@@ -99,7 +99,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
   }
 
   return (
-    <div className="mediNote-widthfix mx-auto rounded-lg px-4">
+    <div className="mediNote-widthfix mx-auto rounded-lg px-16 transcription-welcommassege mt-16 relative">
       {/* Stop Recording Confirmation Popup */}
       {showStopConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -151,7 +151,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
       <div
         className={
           transcription.length === 0
-            ? "mediNote-widthfix-warpper-center"
+            ? "mediNote-widthfix-warpper-center "
             : "mediNote-widthfix-warpper"
         }
       >
@@ -166,11 +166,11 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
                 return (
                   <div
                     key={index}
-                    className={`p-2 rounded-xl border-l-4 transition-all duration-200 hover:shadow-md ${msg.type === "turn-final"
-                        ? "bg-white border-blue-400 hover:bg-white"
+                    className={`p-2 border-l-4 transition-all duration-200 hover:shadow-md transcript-strip-msg ${msg.type === "turn-final"
+                        ? "hover:bg-white"
                         : msg.type === "error"
-                          ? "bg-red-50 border-red-400 hover:bg-red-100"
-                          : "bg-blue-50 border-blue-400 hover:bg-blue-100"
+                          ? "bg-red-50  hover:bg-red-100"
+                          : "bg-blue-50  hover:bg-blue-100"
                       }`}
                   >
                     <div className="flex items-center justify-between">
@@ -193,7 +193,7 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
           )}
         </div>
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 text-white">
             <span
               className={`h-3 w-3 rounded-full ${
                 isConnected ? "bg-green-500" : "bg-red-500"
@@ -206,8 +206,8 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
         </div>
 
         {/* Controls */}
-        <div className="flex flex-wrap gap-3 mb-6 justify-between controle-search-AIDocAssist h-[90px]">
-          <div className="flex items-center">
+        <div className="flex flex-wrap gap-3 mb-10 justify-between controle-search-AIDocAssist h-[70px]">
+          <div className="flex items-center overflow-hidden dm-width">
             <button
               onClick={isRecording ? handleStopRecording : handleStartRecording}
               disabled={!isConnected || isProcessing}
@@ -251,6 +251,24 @@ const TranscriptionInterface: React.FC<TranscriptionInterfaceProps> = ({
             </button>
           </div>
         </div>
+        <span className="bottomlinerGrading">
+              <svg width="289" height="199" viewBox="0 0 289 199" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M74.4604 14.9961C29.4945 21.2278 -3.5762 38.2063 -12.2914 45.6118L-26.7382 51.5987L-18.129 238.328L15.9938 288.05L59.727 287.301L185.831 257.872C186.478 228.034 237.253 176.817 262.56 154.938C307.047 107.868 284.151 58.3168 267.142 39.4252C236.04 -2.0024 184.942 -2.74081 158.943 2.76831C155.608 3.47505 152.272 4.08963 148.876 4.38837C134.405 5.6613 97.5463 9.50809 74.4604 14.9961Z" fill="url(#paint0_linear_3427_90583)" fillOpacity="0.4"/>
+              <defs>
+              <linearGradient id="paint0_linear_3427_90583" x1="307.848" y1="2.45841" x2="-6.38578" y2="289.124" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#45CEF1"/>
+              <stop offset="1" stopColor="#219DF1"/>
+              </linearGradient>
+              </defs>
+              </svg>
+
+        </span>
+        <span className="rightlinerGrading">
+         <svg width="461" height="430" viewBox="0 0 461 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M261.412 0C341.45 8.67863e-05 413.082 35.9951 461.001 92.6807V429.783C460.94 429.856 460.878 429.928 460.816 430H289.244C370.46 416.708 432.435 346.208 432.435 261.232C432.435 166.779 355.865 90.2101 261.412 90.21C166.959 90.21 90.3887 166.779 90.3887 261.232C90.3887 346.208 152.364 416.707 233.579 430H62.0068C23.4388 384.476 0.179688 325.571 0.179688 261.232C0.179741 116.958 117.137 0 261.412 0Z" fill="#C2F5F9" fillOpacity="0.2"/>
+          </svg>
+
+        </span>
       </div>
     </div>
   )

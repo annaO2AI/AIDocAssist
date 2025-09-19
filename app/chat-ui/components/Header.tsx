@@ -49,11 +49,11 @@ export default function HeaderAISearch({ sidebarOpen }: HeaderProps) {
   return (
     <header
           className={clsx(
-            "w-full fixed top-0 z-10 transition-all duration-300 h-18 flex items-center custome-header-shadow",
+            "w-full fixed top-0 z-10 transition-all duration-300 h-18 flex items-center bacgroundColorSt",
             "backdrop-blur-xl supports-[backdrop-filter]:bg-white",
             scrolled
-              ? "shadow-md border-b border-white/30"
-              : "border-b border-white/10",
+              ? "shadow-md border-b border-white/30 "
+              : "border-b border-white/10 bg-white",
             sidebarOpen
               ? "pl-[213px]"
               : pathname === "/" || pathname === "/aiops" || pathname === "/talent-acquisition" || pathname === "/human-resources"
@@ -72,14 +72,14 @@ export default function HeaderAISearch({ sidebarOpen }: HeaderProps) {
           />
           </div>
           <nav className="hidden md:flex space-x-3">
-          <Link
+          {/* <Link
             href="/"
             className={`transition ${
               pathname === "/" ? "ot-title font-semibold activenavigation py-2 px-4 rounded-md" : "text-gray-700 hover:ot-title py-2 px-4 rounded-md"
             }`}
           >
             AIDocAssist
-          </Link>
+          </Link> */}
           {/* <Link
             href="/about"
             className={`transition ${

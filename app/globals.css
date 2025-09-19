@@ -11,15 +11,20 @@ body {
 /* ✅ Custom utilities using @layer if needed */
 @layer utilities {
   .background-chat-ui{
-    background-image: url(../public/bg-otwobg.png); 
+    /* background-image: url(../public/bg-otwobg.png);  */
     background-size:cover ;
-    background-color: #F4F8FB;
+    /* background-color: #F4F8FB; */
+    background-color: #F4FEFF;
+  }
+  .bacgroundColorSt{
+    background-color: #F4FEFF !important;
   }
   .otitle {
     /* color:#323232; */
-    background: linear-gradient(to right, #0A0530,  #4D5DCE, #436EE3);
-    background-clip: text;
-    color: transparent;
+    /* background: linear-gradient(to right, #0A0530,  #4D5DCE, #436EE3); */
+    /* background-clip: text; */
+    /* color: transparent; */
+    color: #fff;
   }
   .ot-title{
     color: #34334B;
@@ -27,6 +32,9 @@ body {
   .osubtitle {
     color: #34334B;
     opacity: 0.9;
+  }
+  .osubtitle-white{
+    color: #fff;
   }
   .border-o2{
     border: 1px solid #d7d9dd; 
@@ -204,7 +212,7 @@ body {
     left: 0;
     right: 0;
     top: 0;
-    background-color: #fafafa;
+    background-color: #F4FEFF;
      transition: all 0.3s ease-in-out;
 
   }
@@ -252,14 +260,20 @@ body {
   .mediNote-widthfix{
     width: 74%;
   }
+  .summaryGenerationSection{
+    background: #161D5D;
+    background: linear-gradient(73deg,rgba(22, 29, 93, 1) 2%, rgba(59, 202, 245, 1) 100%);
+    width: 74%;
+  }
   .controle-search-AIDocAssist{
     background-color: #fff;
-    border: 1px solid #4088F4;
-    padding: 10px 15px;
+    padding: 0px 15px;
     border-radius: 10px;
+    z-index: 2;
+    outline: 8px solid #0052cc66;
   }
   .mediNote-widthfix-warpper{
-    min-height: calc(100vh - 153px);
+    min-height: calc(100vh - 175px);
     display: flex;
     flex-direction: column;
     justify-content: end;
@@ -269,9 +283,11 @@ body {
   }
   .transcriptDoctorPatient{
        max-height: calc(100vh - 350px);
+       z-index: 2;
+       position: relative;
   }
   .mediNote-widthfix-warpper-center{
-    min-height: calc(100vh - 153px);
+    min-height: calc(100vh - 223px);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -348,5 +364,75 @@ body {
     padding: 0;
     font-size: 0;
   }
+  .transcription-welcommassege{
+    background: #161D5D;
+    background: linear-gradient(73deg,rgba(22, 29, 93, 1) 2%, rgba(59, 202, 245, 1) 100%);
+    padding-left: 7rem;
+    padding-right: 7rem;
 
+  }
+  .imagfilter-AI{
+    width: 70%;
+    position: absolute;
+    top: 46%;
+    left: 70px;
+  }
+  .images-ill-mess{
+    height: 110%;
+    right: 0;
+    bottom: 0;
+      background-image: url(../public/AIDocAssistmainpage.png);
+    background-size: 94%;
+    background-position: bottom right;
+    width: 50%;
+    z-index: 0;
+    background-repeat: no-repeat;
+  }
+  .bottomlinerGrading{
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  .transcript-strip-msg{
+    background: rgba(255, 255, 255, 0.7); /* white with 0.8 opacity */
+    backdrop-filter: blur(6px);            /* blur effect */
+    border-radius: 10px;
+  }
+  .rightlinerGrading{
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    overflow: hidden;
+    border-radius: 10px 10px 0px 10px;
+  }
+
+    /* Custom scrollbar */
+  .transcriptDoctorPatient::-webkit-scrollbar {
+    width: 8px;              /* width of the scrollbar */
+  }
+
+  .transcriptDoctorPatient::-webkit-scrollbar-track {
+    background: transparent;       /* track color */
+    border-radius: 8px;
+  }
+
+  .transcriptDoctorPatient::-webkit-scrollbar-thumb {
+    background: #185683;       /* scrollbar handle */
+    border-radius: 8px;
+  }
+
+  .transcriptDoctorPatient::-webkit-scrollbar-thumb:hover {
+    background: #104267;       /* handle on hover */
+  }
+  .dm-width{
+      width: calc(100% - 160px);
+  }
+  .follow-upAppointment-gradiant{
+    background: #A8E9FF;
+    background: linear-gradient(134deg,rgba(168, 233, 255, 1) 2%, rgba(224, 169, 255, 1) 100%);
+    position: relative;
+    z-index: 1;
+  }
 }
