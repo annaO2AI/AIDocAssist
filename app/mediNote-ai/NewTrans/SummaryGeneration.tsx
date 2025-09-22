@@ -535,359 +535,361 @@ export default function SummaryGeneration({
   return (
     <>
       {isLoading && <Loader />}
-      <div className={`w-full mt-12 p-16 mx-auto bg-gray-50 min-h-screen rounded-lg summaryGenerationSection relative ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
-        {notification.show && (
-          <div className="fixed top-4 right-4 z-50">
-            <div className="flex items-center bg-green-500 text-white text-sm font-bold px-4 py-3 rounded-md shadow-lg">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              {notification.message}
-            </div>
-          </div>
-        )}
-        <div className="rounded-lg mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center">
-                <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M5 8.8421C6.18575 8.8421 7.14283 7.85471 7.14283 6.6316V2.21053C7.14283 0.987368 6.18575 0 5 0C3.81425 0 2.85714 0.987368 2.85714 2.21053V6.6316C2.85714 7.85471 3.81425 8.8421 5 8.8421ZM4.28575 2.21053C4.28575 1.80527 4.60717 1.47369 5 1.47369C5.39283 1.47369 5.71425 1.80527 5.71425 2.21053V6.6316C5.71425 7.04423 5.4 7.3684 5 7.3684C4.60717 7.3684 4.28575 7.03684 4.28575 6.6316V2.21053ZM8.78575 6.6316H10C10 9.14418 8.05717 11.2221 5.71425 11.5832V14H4.28575V11.5832C1.94286 11.2221 0 9.14418 0 6.6316H1.21428C1.21428 8.8421 3.02858 10.3895 5 10.3895C6.97142 10.3895 8.78575 8.8421 8.78575 6.6316Z" fill="#fff"/>
-                </svg>
+      <>
+        <div className={`w-full mt-12 p-16 mx-auto bg-gray-50 min-h-screen rounded-lg summaryGenerationSection relative ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+          {notification.show && (
+            <div className="fixed top-4 right-4 z-50">
+              <div className="flex items-center bg-green-500 text-white text-sm font-bold px-4 py-3 rounded-md shadow-lg">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                {notification.message}
               </div>
-              <h1 className="text-xl font-semibold text-gray-900 text-white">
-                Patient-{patientName.replace("#", "")}.mp3
-              </h1>
             </div>
-            <div className="flex items-center space-x-2">
-              <button
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleDownloadRecording}
-                disabled={isDownloading || isLoading || isApproved}
-              >
-                {isDownloading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
-                    <span>Downloading...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span>Download</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-          
-          {/* Enhanced horizontal audio player with layered waveform */}
-          <div className="relative w-full max-w-2xl mb-6">
-            <div className="relative rounded-full overflow-hidden flex items-center px-2 py-2 border border-white">
-              {/* Control Buttons */}
-              <div className="flex items-center space-x-2 mr-3">
-                {/* Backward 10s */}
-                {/* <button
-                  className="p-2 text-white/70 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={handleSkipBackward}
-                  disabled={isLoadingAudio || isLoading || isApproved}
-                  title="Rewind 10 seconds"
-                >
-                  <SkipBack className="h-4 w-4" />
-                </button> */}
-                
-                {/* Play/Pause Button */}
+          )}
+          <div className="rounded-lg mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center">
+                  <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M5 8.8421C6.18575 8.8421 7.14283 7.85471 7.14283 6.6316V2.21053C7.14283 0.987368 6.18575 0 5 0C3.81425 0 2.85714 0.987368 2.85714 2.21053V6.6316C2.85714 7.85471 3.81425 8.8421 5 8.8421ZM4.28575 2.21053C4.28575 1.80527 4.60717 1.47369 5 1.47369C5.39283 1.47369 5.71425 1.80527 5.71425 2.21053V6.6316C5.71425 7.04423 5.4 7.3684 5 7.3684C4.60717 7.3684 4.28575 7.03684 4.28575 6.6316V2.21053ZM8.78575 6.6316H10C10 9.14418 8.05717 11.2221 5.71425 11.5832V14H4.28575V11.5832C1.94286 11.2221 0 9.14418 0 6.6316H1.21428C1.21428 8.8421 3.02858 10.3895 5 10.3895C6.97142 10.3895 8.78575 8.8421 8.78575 6.6316Z" fill="#fff"/>
+                  </svg>
+                </div>
+                <h1 className="text-xl font-semibold text-gray-900 text-white">
+                  Patient-{patientName.replace("#", "")}.mp3
+                </h1>
+              </div>
+              <div className="flex items-center space-x-2">
                 <button
-                  className={`relative flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm transition-all duration-200 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isLoadingAudio ? 'animate-pulse' : ''
-                  }`}
-                  onClick={togglePlayPause}
-                  disabled={isLoadingAudio || isLoading || isApproved}
-                  title={isPlaying ? "Pause" : "Play"}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleDownloadRecording}
+                  disabled={isDownloading || isLoading || isApproved}
                 >
-                  {isLoadingAudio ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
-                  ) : isPlaying ? (
-                    <Pause className="h-5 w-5 text-white" />
+                  {isDownloading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
+                      <span>Downloading...</span>
+                    </>
                   ) : (
-                    <Play className="h-5 w-5 text-white ml-0.5" />
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>Download</span>
+                    </>
                   )}
                 </button>
-                
-                {/* Forward 10s */}
-                {/* <button
-                  className="p-2 text-white/70 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={handleSkipForward}
-                  disabled={isLoadingAudio || isLoading || isApproved}
-                  title="Fast forward 10 seconds"
-                >
-                  <SkipForward className="h-4 w-4" />
-                </button> */}
               </div>
-              
-              {/* Layered Waveform Visualization */}
-              <div className="relative flex-1 h-6 mx-2 overflow-hidden">
-                {/* Gray background waveform - full length */}
-                <div className="absolute inset-0 flex items-center space-x-0.5">
-                  {waveformHeights.current.map((height, i) => (
-                    <div
-                      key={`gray-${i}`}
-                      className="w-0.5 bg-blue-300 rounded-full opacity-[.37]"
-                      style={{ height: `${height}px` }}
-                    />
-                  ))}
+            </div>
+            
+            {/* Enhanced horizontal audio player with layered waveform */}
+            <div className="relative w-full max-w-2xl mb-6">
+              <div className="relative rounded-full overflow-hidden flex items-center px-2 py-2 border border-white">
+                {/* Control Buttons */}
+                <div className="flex items-center space-x-2 mr-3">
+                  {/* Backward 10s */}
+                  {/* <button
+                    className="p-2 text-white/70 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSkipBackward}
+                    disabled={isLoadingAudio || isLoading || isApproved}
+                    title="Rewind 10 seconds"
+                  >
+                    <SkipBack className="h-4 w-4" />
+                  </button> */}
+                  
+                  {/* Play/Pause Button */}
+                  <button
+                    className={`relative flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm transition-all duration-200 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isLoadingAudio ? 'animate-pulse' : ''
+                    }`}
+                    onClick={togglePlayPause}
+                    disabled={isLoadingAudio || isLoading || isApproved}
+                    title={isPlaying ? "Pause" : "Play"}
+                  >
+                    {isLoadingAudio ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                    ) : isPlaying ? (
+                      <Pause className="h-5 w-5 text-white" />
+                    ) : (
+                      <Play className="h-5 w-5 text-white ml-0.5" />
+                    )}
+                  </button>
+                  
+                  {/* Forward 10s */}
+                  {/* <button
+                    className="p-2 text-white/70 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSkipForward}
+                    disabled={isLoadingAudio || isLoading || isApproved}
+                    title="Fast forward 10 seconds"
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </button> */}
                 </div>
                 
-                {/* Blue highlight waveform - increases with progress */}
-                <div 
-                  className="absolute inset-0 flex items-center space-x-0.5 overflow-hidden"
-                  style={{ width: `${progress}%` }}
-                >
-                  <div className="flex items-center space-x-0.5">
+                {/* Layered Waveform Visualization */}
+                <div className="relative flex-1 h-6 mx-2 overflow-hidden">
+                  {/* Gray background waveform - full length */}
+                  <div className="absolute inset-0 flex items-center space-x-0.5">
                     {waveformHeights.current.map((height, i) => (
                       <div
-                        key={`blue-${i}`}
-                        className={`w-0.5 bg-blue-200 rounded-full transition-all duration-300 ease-in-out ${
-                          isPlaying ? 'animate-pulse' : ''
-                        }`}
+                        key={`gray-${i}`}
+                        className="w-0.5 bg-blue-300 rounded-full opacity-[.37]"
                         style={{ height: `${height}px` }}
                       />
                     ))}
                   </div>
-                </div>
-              </div>
-              
-              {/* Progress Bar with Click-to-Seek */}
-              <div className="flex items-center space-x-2 mx-3" ref={progressRef}>
-                <div className="w-16 text-white text-xs font-medium text-left min-w-[3.5rem]">
-                  {formatTime(currentTime)}
-                </div>
-                
-                <div 
-                  className="flex-1 h-1.5 bg-white/30 rounded-full cursor-pointer relative group"
-                  onClick={handleSeek}
-                >
+                  
+                  {/* Blue highlight waveform - increases with progress */}
                   <div 
-                    className={`h-full bg-white/80 rounded-full transition-all duration-300 ease-linear relative overflow-hidden ${
-                      isPlaying ? 'animate-pulse' : ''
-                    }`}
+                    className="absolute inset-0 flex items-center space-x-0.5 overflow-hidden"
                     style={{ width: `${progress}%` }}
                   >
-                    {/* Thumb indicator */}
-                    <div className="absolute top-1/2 -translate-y-1/2 right-0 w-2 h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                    <div className="flex items-center space-x-0.5">
+                      {waveformHeights.current.map((height, i) => (
+                        <div
+                          key={`blue-${i}`}
+                          className={`w-0.5 bg-blue-200 rounded-full transition-all duration-300 ease-in-out ${
+                            isPlaying ? 'animate-pulse' : ''
+                          }`}
+                          style={{ height: `${height}px` }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="w-10 text-white text-xs font-medium text-right min-w-[2.5rem]">
-                  {formatTime(duration)}
+                {/* Progress Bar with Click-to-Seek */}
+                <div className="flex items-center space-x-2 mx-3" ref={progressRef}>
+                  <div className="w-16 text-white text-xs font-medium text-left min-w-[3.5rem]">
+                    {formatTime(currentTime)}
+                  </div>
+                  
+                  <div 
+                    className="flex-1 h-1.5 bg-white/30 rounded-full cursor-pointer relative group"
+                    onClick={handleSeek}
+                  >
+                    <div 
+                      className={`h-full bg-white/80 rounded-full transition-all duration-300 ease-linear relative overflow-hidden ${
+                        isPlaying ? 'animate-pulse' : ''
+                      }`}
+                      style={{ width: `${progress}%` }}
+                    >
+                      {/* Thumb indicator */}
+                      <div className="absolute top-1/2 -translate-y-1/2 right-0 w-2 h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="w-10 text-white text-xs font-medium text-right min-w-[2.5rem]">
+                    {formatTime(duration)}
+                  </div>
                 </div>
               </div>
             </div>
+            {/* <Image
+              src="/audio-clip-illustrations.svg"
+              alt="Audio Clip Illustration"
+              width={449}
+              height={42}
+            /> */}
           </div>
-          {/* <Image
-            src="/audio-clip-illustrations.svg"
-            alt="Audio Clip Illustration"
-            width={449}
-            height={42}
-          /> */}
-        </div>
-        <div className="rounded-lg shadow-sm p-6 mb-6 bg-white ">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
-            <button
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              onClick={() => setShowICDGenerator(!showICDGenerator)}
-              disabled={isLoading || isApproved}
-            >
-              ICD Code Generator
-            </button>
-          </div>
-          <div className="flex justify-between items-start">
-            <div className="w-full pr-4">
-              {isEdit ? (
-                <textarea
-                  className="w-full h-96 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none"
-                  value={editedSummary || ""}
-                  onChange={(e) => setEditedSummary(e.target.value)}
-                  placeholder="Edit the summary here..."
-                  disabled={isApproved}
+          <div className="rounded-lg shadow-sm p-6 mb-6 bg-white ">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
+              <button
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                onClick={() => setShowICDGenerator(!showICDGenerator)}
+                disabled={isLoading || isApproved}
+              >
+                ICD Code Generator
+              </button>
+            </div>
+            <div className="flex justify-between items-start">
+              <div className="w-full pr-4">
+                {isEdit ? (
+                  <textarea
+                    className="w-full h-96 p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none"
+                    value={editedSummary || ""}
+                    onChange={(e) => setEditedSummary(e.target.value)}
+                    placeholder="Edit the summary here..."
+                    disabled={isApproved}
+                  />
+                ) : (
+                  <div className="text-gray-700 text-sm leading-relaxed">
+                    {summaryContent === "Summary content not available." ? (
+                      <p>{summaryContent}</p>
+                    ) : (
+                      renderContentSections(summaryContent || "")
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="w-[300px] flex flex-col items-center justify-center">
+                <Image
+                  src="/summary-docter-petiont.svg"
+                  alt="Doctor-Patient Illustration"
+                  width={250}
+                  height={170}
+                  className="mt-12"
                 />
-              ) : (
-                <div className="text-gray-700 text-sm leading-relaxed">
-                  {summaryContent === "Summary content not available." ? (
-                    <p>{summaryContent}</p>
-                  ) : (
-                    renderContentSections(summaryContent || "")
+              </div>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <Stethoscope className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900 mb-1">Doctor Call Insights</h3>
+                  <p className="text-sm text-gray-600 mb-3">{doctorName}</p>
+                  {Object.entries(structuredInsights).map(
+                    ([section, items]) =>
+                      items.length > 0 && (
+                        <div key={section} className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-800 mb-1">{section}</h4>
+                          <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                            {items.map((item, idx) => (
+                              <li key={idx}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
+                  )}
+                  {doctorBullets.length === 0 && (
+                    <p className="text-sm text-gray-500">No doctor insights available.</p>
                   )}
                 </div>
-              )}
+              </div>
             </div>
-            <div className="w-[300px] flex flex-col items-center justify-center">
-              <Image
-                src="/summary-docter-petiont.svg"
-                alt="Doctor-Patient Illustration"
-                width={250}
-                height={170}
-                className="mt-12"
-              />
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900 mb-1">Patient Call Insights</h3>
+                  <p className="text-sm text-gray-600 mb-3">{patientName}</p>
+                  {processedPatientInsights.length > 0 ? (
+                    <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                      {processedPatientInsights.map((insight, idx) => (
+                        <li key={idx}>{insight}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500">No patient insights available.</p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="rounded-lg shadow-sm p-6 follow-upAppointment-gradiant">
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <Stethoscope className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+                <Image
+                  src="/follow-up-appointment.svg"
+                  alt="Follow-up Illustration"
+                  width={40}
+                  height={40}
+                />
               </div>
               <div className="flex-1">
-                <h3 className="font-medium text-gray-900 mb-1">Doctor Call Insights</h3>
-                <p className="text-sm text-gray-600 mb-3">{doctorName}</p>
-                {Object.entries(structuredInsights).map(
-                  ([section, items]) =>
-                    items.length > 0 && (
-                      <div key={section} className="mb-4">
-                        <h4 className="text-sm font-semibold text-gray-800 mb-1">{section}</h4>
-                        <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-                          {items.map((item, idx) => (
-                            <li key={idx}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )
-                )}
-                {doctorBullets.length === 0 && (
-                  <p className="text-sm text-gray-500">No doctor insights available.</p>
-                )}
+                <h3 className="font-medium text-gray-900 mb-1">Follow-up Appointment</h3>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Note:</span> {followupNote || "No follow-up actions specified"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Date:</span> {followupDate}
+                </p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-medium text-gray-900 mb-1">Patient Call Insights</h3>
-                <p className="text-sm text-gray-600 mb-3">{patientName}</p>
-                {processedPatientInsights.length > 0 ? (
-                  <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-                    {processedPatientInsights.map((insight, idx) => (
-                      <li key={idx}>{insight}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-gray-500">No patient insights available.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg shadow-sm p-6 mb-6 follow-upAppointment-gradiant">
-          <div className="flex items-start space-x-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
-              <Image
-                src="/follow-up-appointment.svg"
-                alt="Follow-up Illustration"
-                width={40}
-                height={40}
-              />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900 mb-1">Follow-up Appointment</h3>
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Note:</span> {followupNote || "No follow-up actions specified"}
-              </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Date:</span> {followupDate}
-              </p>
-            </div>
-          </div>
+        
+          <span className="bottomlinerGrading">
+                <svg width="289" height="199" viewBox="0 0 289 199" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M74.4604 14.9961C29.4945 21.2278 -3.5762 38.2063 -12.2914 45.6118L-26.7382 51.5987L-18.129 238.328L15.9938 288.05L59.727 287.301L185.831 257.872C186.478 228.034 237.253 176.817 262.56 154.938C307.047 107.868 284.151 58.3168 267.142 39.4252C236.04 -2.0024 184.942 -2.74081 158.943 2.76831C155.608 3.47505 152.272 4.08963 148.876 4.38837C134.405 5.6613 97.5463 9.50809 74.4604 14.9961Z" fill="url(#paint0_linear_3427_90583)" fillOpacity="0.4"/>
+                <defs>
+                <linearGradient id="paint0_linear_3427_90583" x1="307.848" y1="2.45841" x2="-6.38578" y2="289.124" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#45CEF1"/>
+                <stop offset="1" stopColor="#219DF1"/>
+                </linearGradient>
+                </defs>
+                </svg>
+
+          </span>
+          <span className="rightlinerGrading">
+          <svg width="461" height="430" viewBox="0 0 461 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M261.412 0C341.45 8.67863e-05 413.082 35.9951 461.001 92.6807V429.783C460.94 429.856 460.878 429.928 460.816 430H289.244C370.46 416.708 432.435 346.208 432.435 261.232C432.435 166.779 355.865 90.2101 261.412 90.21C166.959 90.21 90.3887 166.779 90.3887 261.232C90.3887 346.208 152.364 416.707 233.579 430H62.0068C23.4388 384.476 0.179688 325.571 0.179688 261.232C0.179741 116.958 117.137 0 261.412 0Z" fill="#C2F5F9" fillOpacity="0.2"/>
+          </svg>
+          </span>
         </div>
         <div className="flex justify-center space-x-4 mt-8 mb-8 relative  z-[1]">
-          {!isEdit && (
-            <button
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              onClick={handleApproveSummary}
-              disabled={isLoading || isApproved}
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              <span>Approve Summary</span>
-            </button>
-          )}
-          {!isEdit && !isApproved && (
-            <button
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              onClick={() => {
-                setIsEdit(true);
-                setEditedSummary(summaryContent);
-                try {
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "true");
-                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: true } }));
-                  }
-                } catch {}
-              }}
-              disabled={isLoading || isApproved}
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              <span>Edit Summary</span>
-            </button>
-          )}
-          {isEdit && (
-            <button
-              className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-              onClick={handleSaveEditedSummary}
-              disabled={isLoading || isApproved}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              <span>Save Changes</span>
-            </button>
-          )}
-          {isEdit && (
-            <button
-              className="flex items-center px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-              onClick={() => {
-                setIsEdit(false);
-                try {
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false");
-                    window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }));
-                  }
-                } catch {}
-              }}
-              disabled={isLoading || isApproved}
-            >
-              <span>Cancel</span>
-            </button>
-          )}
-          {!isEdit && !isApproved && (
-            <button
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              onClick={handleSaveSummary}
-              disabled={isLoading || isApproved}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              <span>Save for Later</span>
-            </button>
-          )}
+            {!isEdit && (
+              <button
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                onClick={handleApproveSummary}
+                disabled={isLoading || isApproved}
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                <span>Approve Summary</span>
+              </button>
+            )}
+            {!isEdit && !isApproved && (
+              <button
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                onClick={() => {
+                  setIsEdit(true);
+                  setEditedSummary(summaryContent);
+                  try {
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem(`visitSummaryEdit:${sessionId}`, "true");
+                      window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: true } }));
+                    }
+                  } catch {}
+                }}
+                disabled={isLoading || isApproved}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                <span>Edit Summary</span>
+              </button>
+            )}
+            {isEdit && (
+              <button
+                className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                onClick={handleSaveEditedSummary}
+                disabled={isLoading || isApproved}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                <span>Save Changes</span>
+              </button>
+            )}
+            {isEdit && (
+              <button
+                className="flex items-center px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                onClick={() => {
+                  setIsEdit(false);
+                  try {
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem(`visitSummaryEdit:${sessionId}`, "false");
+                      window.dispatchEvent(new CustomEvent("visitSummaryEditToggle", { detail: { sessionId, isEdit: false } }));
+                    }
+                  } catch {}
+                }}
+                disabled={isLoading || isApproved}
+              >
+                <span>Cancel</span>
+              </button>
+            )}
+            {!isEdit && !isApproved && (
+              <button
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                onClick={handleSaveSummary}
+                disabled={isLoading || isApproved}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                <span>Save for Later</span>
+              </button>
+            )}
         </div>
-         <span className="bottomlinerGrading">
-              <svg width="289" height="199" viewBox="0 0 289 199" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M74.4604 14.9961C29.4945 21.2278 -3.5762 38.2063 -12.2914 45.6118L-26.7382 51.5987L-18.129 238.328L15.9938 288.05L59.727 287.301L185.831 257.872C186.478 228.034 237.253 176.817 262.56 154.938C307.047 107.868 284.151 58.3168 267.142 39.4252C236.04 -2.0024 184.942 -2.74081 158.943 2.76831C155.608 3.47505 152.272 4.08963 148.876 4.38837C134.405 5.6613 97.5463 9.50809 74.4604 14.9961Z" fill="url(#paint0_linear_3427_90583)" fillOpacity="0.4"/>
-              <defs>
-              <linearGradient id="paint0_linear_3427_90583" x1="307.848" y1="2.45841" x2="-6.38578" y2="289.124" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#45CEF1"/>
-              <stop offset="1" stopColor="#219DF1"/>
-              </linearGradient>
-              </defs>
-              </svg>
-
-         </span>
-         <span className="rightlinerGrading">
-         <svg width="461" height="430" viewBox="0 0 461 430" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M261.412 0C341.45 8.67863e-05 413.082 35.9951 461.001 92.6807V429.783C460.94 429.856 460.878 429.928 460.816 430H289.244C370.46 416.708 432.435 346.208 432.435 261.232C432.435 166.779 355.865 90.2101 261.412 90.21C166.959 90.21 90.3887 166.779 90.3887 261.232C90.3887 346.208 152.364 416.707 233.579 430H62.0068C23.4388 384.476 0.179688 325.571 0.179688 261.232C0.179741 116.958 117.137 0 261.412 0Z" fill="#C2F5F9" fillOpacity="0.2"/>
-        </svg>
-        </span>
-      </div>
-      
+      </>
       {/* Properly connected audio element */}
         {audioUrl && (
             <audio 
