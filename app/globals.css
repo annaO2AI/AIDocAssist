@@ -435,4 +435,19 @@ body {
     position: relative;
     z-index: 1;
   }
+  .gradintProfile{
+    background: #1E5588;
+    background: linear-gradient(134deg, rgba(21, 47, 103, 1) 100%, rgba(30, 85, 136, 1) 2%);
+  }
+  .garadiantProfile-details{
+    background: #1B3371;
+    background: linear-gradient(180deg,rgba(27, 51, 113, 1) 2%, rgb(33, 119, 156) 100%);
+  }
+  .border-custome-profile{
+    outline: 8px solid #2346974d;
+  }
+  .boder-seprate-profile{
+    border-top: 1px solid #1b71a3;
+    border-bottom: 1px solid #2485bd;
+  }
 }

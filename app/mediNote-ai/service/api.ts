@@ -592,25 +592,49 @@ export class APIService {
       throw error
     }
   }
-static async getCurrentUser(): Promise<any> {
-  try {
-    const response = await fetch(`${API_SERVICE}/auth/me`, {
-      method: 'GET',
-      credentials: 'include',
-    });
 
-    if (!response.ok) {
-      console.log('Response status:', response.status)
-      console.log('Response headers:', Array.from(response.headers.entries()))
-      const errorText = await response.text()
-      console.log('Error response:', errorText)
-      throw new Error(`HTTP error! status: ${response.status}`);
+  static async getCurrentUser(): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        console.log('Response status:', response.status)
+        console.log('Response headers:', Array.from(response.headers.entries()))
+        const errorText = await response.text()
+        console.log('Error response:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      throw error;
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error getting current user:', error);
-    throw error;
   }
-}
+
+  static async logout(): Promise<any> {
+    try {
+      const response = await fetch(`${API_SERVICE}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.log(errorData);
+        throw new Error(`Logout failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  }
 }
