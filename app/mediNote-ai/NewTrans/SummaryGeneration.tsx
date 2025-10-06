@@ -89,25 +89,24 @@ export default function SummaryGeneration({
     if (!sessionId) return;
     try {
       setIsLoadingAudio(true);
-      const { blob, filename } = await APIService.downloadRecording(sessionId);
-      const audioUrl = URL.createObjectURL(blob);
-      
-      // Set the audio URL to the state
-      setAudioUrl(audioUrl);
+      const info = await APIService.getRecordingInfo(sessionId);
+      const directUrl = info?.web_url || null;
+      if (!directUrl) {
+        throw new Error('Recording URL not available');
+      }
+      setAudioUrl(directUrl);
       setIsLoadingAudio(false);
-      
-      // Get audio element and set metadata listener
+
       if (audioRef.current) {
-        audioRef.current.src = audioUrl;
+        audioRef.current.src = directUrl;
         audioRef.current.load();
-        
         audioRef.current.addEventListener('loadedmetadata', () => {
           if (audioRef.current) {
             setDuration(audioRef.current.duration || 125);
           }
         }, { once: true });
       }
-      
+
       showNotification("Audio loaded successfully!");
     } catch (err) {
       handleApiError(err, "Failed to load audio");
@@ -251,14 +250,7 @@ export default function SummaryGeneration({
     };
   }, [handleTimeUpdate]);
 
-  // Cleanup audio URL on unmount
-  useEffect(() => {
-    return () => {
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
+  // No revoke needed when using direct web URLs
 
   useEffect(() => {
     fetchSummaryById();
@@ -515,11 +507,17 @@ export default function SummaryGeneration({
   const handleDownloadRecording = async () => {
     try {
       setIsDownloading(true);
-      const { blob, filename } = await APIService.downloadRecording(sessionId);
+      const info = await APIService.getRecordingInfo(sessionId);
+      const url = info?.web_url || '';
+      if (!url) throw new Error('Recording URL not available');
+      // Force download by fetching as blob and using an object URL
+      const response = await fetch(url, { method: 'GET' });
+      if (!response.ok) throw new Error(`Failed to fetch audio: ${response.status}`);
+      const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = filename || `Patient-${patientName.replace("#", "")}.wav`;
+      link.download = info?.filename || `Patient-${patientName.replace("#", "")}.wav`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -693,7 +691,7 @@ export default function SummaryGeneration({
           <div className="rounded-lg shadow-sm p-6 mb-6 bg-white ">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Visit Summary</h2>
-              <button
+                <button
                 className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                 onClick={() => setShowICDGenerator(!showICDGenerator)}
                 disabled={isLoading || isApproved}
@@ -911,6 +909,6 @@ export default function SummaryGeneration({
               }}
             />
           )}
-    </>
+  </>
   );
 }

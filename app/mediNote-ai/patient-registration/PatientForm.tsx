@@ -21,6 +21,8 @@ export default function PatientForm() {
   const [token, setToken] = useState<string>("")
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [registeredPatientId, setRegisteredPatientId] = useState<number | null>(null)
+  const [registeredPatientName, setRegisteredPatientName] = useState<string | null>(null)
+
   const [showVoiceEnroll, setShowVoiceEnroll] = useState(false)
 
   useEffect(() => {
@@ -46,10 +48,14 @@ export default function PatientForm() {
     setIsSubmitting(true)
     try {
       const response = await APIService.registerPatient(formData)
+      console.log("API Response:", response) // Debug log
+      
       if (!response) {
         throw new Error("No response received from server")
       }
+      
       setRegisteredPatientId(response.id)
+      setRegisteredPatientName(`${response.first_name} ${response.last_name}`)
       setFormData({
         first_name: "",
         last_name: "",
@@ -59,9 +65,11 @@ export default function PatientForm() {
         address: "",
       })
       setSuccessMessage("Patient registered successfully!")
+      setError(null)
     } catch (error) {
       console.error("Registration failed:", error)
       setError(error instanceof Error ? error.message : "Registration failed")
+      setSuccessMessage(null)
     } finally {
       setIsSubmitting(false)
     }
@@ -71,6 +79,8 @@ export default function PatientForm() {
     setSuccessMessage(null)
     setError(null)
     setShowVoiceEnroll(false)
+    setRegisteredPatientId(null)
+    setRegisteredPatientName(null)
   }
 
   const handleCloseVoiceEnroll = () => {
@@ -113,6 +123,10 @@ export default function PatientForm() {
             <div className="m-auto mb-2 text-center">
               <span className="font-bold ot-title">Patient ID:</span>
               <span className="ot-title"> {registeredPatientId}</span>
+            </div>
+            <div className="m-auto mb-2 text-center">
+              <span className="font-bold ot-title">Patient Name:</span>
+              <span className="ot-title"> {registeredPatientName}</span>
             </div>
 
             <p className="text-sm mb-6 ot-title text-center osubtitle">
