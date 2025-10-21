@@ -273,16 +273,16 @@ body {
     outline: 8px solid #0052cc66;
   }
   .mediNote-widthfix-warpper{
-    min-height: calc(100vh - 175px);
+    min-height: calc(100vh - 200px);
     display: flex;
     flex-direction: column;
     justify-content: end;
   }
   .Patient-voice{
-    height: calc(100vh - 250px);
+        height: calc(100vh - 177px);
   }
   .transcriptDoctorPatient{
-       max-height: calc(100vh - 350px);
+      max-height: calc(100vh - 430px);
        z-index: 2;
        position: relative;
   }
@@ -371,6 +371,10 @@ body {
     padding-right: 7rem;
 
   }
+    .transcription-welcommassege-main{
+    background: #161D5D;
+    background: linear-gradient(73deg,rgba(22, 29, 93, 1) 2%, rgba(59, 202, 245, 1) 100%);
+  }
   .imagfilter-AI{
     width: 70%;
     position: absolute;
@@ -394,6 +398,7 @@ body {
     left: 0px;
     overflow: hidden;
     border-radius: 10px;
+     z-index: 1;
   }
   .transcript-strip-msg{
     background: rgba(255, 255, 255, 0.7); /* white with 0.8 opacity */
@@ -406,6 +411,7 @@ body {
     right: 0px;
     overflow: hidden;
     border-radius: 10px 10px 0px 10px;
+    z-index: 1;
   }
 
     /* Custom scrollbar */
@@ -449,5 +455,108 @@ body {
   .boder-seprate-profile{
     border-top: 1px solid #1b71a3;
     border-bottom: 1px solid #2485bd;
+  }
+  .searchPatients-bg{
+    background-color: #02102870;
+    border-radius: 10px 0 0 10px;
+    width: 300px;
+    height: calc(100vh - 179px);
+  }
+  .imagfilter-doctor img{
+    width: 100%;
+    width: 100%;
+  }
+  .StartConversation img{
+    width: 100%;
+    width: 100%;
+  }
+  .bradiantAdd{
+    background: #D36C2D;
+    background: linear-gradient(96deg,rgba(211, 108, 45, 1) 2%, rgba(146, 52, 213, 1) 100%);
+  }
+  .SearchConversation{
+    width: 100%;
+    background-color: #E2E4FF;
+    border-radius: 4px;
+    outline: 8px solid #0052cc50;
+  }
+  .patent-listAuto{
+    overflow-y: auto;
+    height: calc(100vh - 340px);
+  }
+     /* Custom scrollbar */
+  .patent-listAuto::-webkit-scrollbar {
+    width: 8px;              /* width of the scrollbar */
+  }
+
+  .patent-listAuto::-webkit-scrollbar-track {
+    background: transparent;       /* track color */
+    border-radius: 8px;
+  }
+
+  .patent-listAuto::-webkit-scrollbar-thumb {
+    background: #3089c9;       /* scrollbar handle */
+    border-radius: 8px;
+  }
+
+  .patent-listAuto::-webkit-scrollbar-thumb:hover {
+    background: #3089c9;       /* handle on hover */
+  }
+  .patent-active{
+    width: 18px;
+    height: 18px;
+    background-color: #03D361;
+    border-radius: 100px;
+  }
+  .patent-inactive{
+    width: 18px;
+    height: 18px;
+    background-color: #7E83A2;
+    border-radius: 100px;
+  }
+  .handleSelectPatent:hover{
+      background-color: #0975BB;
+  }
+  .handleSelectPatent:hover div, .handleSelectPatent:hover span{
+    color: #fff;
+  }
+  .SearchDoctorToggle{
+    background-color: #02102870;
+    border-radius: 0px 10px 10px 0px;
+    width: 300px;
+    height: calc(100vh - 177px);
+  }
+  .DoctorResultslist{
+    overflow-y: auto;
+    height: calc(100vh - 347px);
+  }
+     /* Custom scrollbar */
+  .DoctorResultslist::-webkit-scrollbar {
+    width: 8px;              /* width of the scrollbar */
+  }
+
+  .pDoctorResultslist::-webkit-scrollbar-track {
+    background: transparent;       /* track color */
+    border-radius: 8px;
+  }
+
+  .DoctorResultslist::-webkit-scrollbar-thumb {
+    background: #0A1D40;       /* scrollbar handle */
+    border-radius: 8px;
+  }
+
+  .DoctorResultslist::-webkit-scrollbar-thumb:hover {
+    background: #0A1D40;       /* handle on hover */
+  }
+
+  .patientError{
+    position: absolute;
+    left: -120px;
+    top: 40px;
+  }
+  .doctorError-ab{
+    position: absolute;
+    right: -99px;
+    top: 36px;
   }
 }
