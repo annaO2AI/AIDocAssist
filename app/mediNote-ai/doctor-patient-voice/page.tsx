@@ -1,3 +1,4 @@
+//page.tsx
 "use client"
 
 import { useEffect, useState, useRef } from "react"
@@ -25,6 +26,8 @@ export default function ProcurementSearchPage() {
   const [sessionId, setSessionId] = useState<number>()
   const [patientId, setPatientId] = useState<number>()
   const [doctorId, setDoctorId] = useState<number>()
+  const [patientName, setPatientName] = useState<string>("") // Added state for patientName
+  const [doctorName, setDoctorName] = useState<string>("") // Added state for doctorName
   const [currentState, setCurrentState] = useState<AppState>("patientCheck")
   const [transcriptionEnd, setTranscriptionEnd] = useState<TranscriptionSummary | null>(null)
   const [showICDGenerator, setShowICDGenerator] = useState(false)
@@ -70,7 +73,7 @@ export default function ProcurementSearchPage() {
   // Show sidebar on the talent-acquisition page
   const showSidebar = pathname === "/mediNote-ai/doctor-patient-voice"
 
-  const startRecording = async (patientId: number, doctorIdParam?: number) => {
+  const startRecording = async (patientId: number, doctorIdParam: number, patientName: string, doctorName: string) => {
     try {
       const effectiveDoctorId = doctorIdParam ?? doctorId
       if (!effectiveDoctorId) {
@@ -79,15 +82,23 @@ export default function ProcurementSearchPage() {
       }
       const data = await APIService.startSession(patientId, effectiveDoctorId)
       if (data) {
+        console.log("startRecording:", { sessionId: data?.session_id, patientId, doctorId: effectiveDoctorId, patientName, doctorName }); // Debug log
         setSessionId(data?.session_id)
         setPatientId(patientId)
         setDoctorId(effectiveDoctorId)
+        setPatientName(patientName || "Unknown Patient") // Store patientName
+        setDoctorName(doctorName || "Unknown Doctor") // Store doctorName
         setCurrentState("transcription")
       }
     } catch (error) {
       console.log("Failed to start recording:", error)
     }
   }
+
+  // Debug state changes
+  useEffect(() => {
+    console.log("ProcurementSearchPage state:", { sessionId, patientId, doctorId, patientName, doctorName, currentState });
+  }, [sessionId, patientId, doctorId, patientName, doctorName, currentState]);
 
   return (
     <DashboardProvider>
@@ -101,7 +112,7 @@ export default function ProcurementSearchPage() {
           />
         )}
         <HeaderAISearch sidebarOpen={showSidebar && isSidebarExpanded} />
-        <Breadcrumbs sidebarOpen={showSidebar && isSidebarExpanded} />
+        {/* <Breadcrumbs sidebarOpen={showSidebar && isSidebarExpanded} /> */}
         <div
           className="flex flex-col flex-1 transition-all duration-300 ease-in-out"
           style={{ marginLeft: showSidebar ? sidebarWidth : 0 }}
@@ -117,6 +128,8 @@ export default function ProcurementSearchPage() {
                   sessionId={sessionId}
                   patientId={patientId}
                   setTranscriptionEnd={setTranscriptionEnd}
+                  patientName={patientName} // Pass stored patientName
+                  doctorName={doctorName}   // Pass stored doctorName
                 />
               )}
               {sessionId && patientId && transcriptionEnd && (
@@ -127,6 +140,7 @@ export default function ProcurementSearchPage() {
                   summaryData={sampleData}
                   showICDGenerator={showICDGenerator}
                   setShowICDGenerator={setShowICDGenerator}
+                  doctorId={doctorId || 0}
                 />
               )}
               {sessionId && patientId && transcriptionEnd && showICDGenerator && (
