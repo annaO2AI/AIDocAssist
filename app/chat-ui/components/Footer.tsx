@@ -5,7 +5,7 @@ export default function FooterAISearch() {
         <span className="font-medium"> ⚠️ Disclaimer:</span>
         This content is AI-generated. Please review carefully and use your judgment before making decisions.
       </div>
-      <p className="text-gray-500">© 2025. All rights reserved.</p>
+      <p className="text-gray-500">© 2026. All rights reserved.</p>
     </footer>
   )
 }
